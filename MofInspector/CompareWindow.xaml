@@ -1,0 +1,103 @@
+﻿<Window x:Class="MofInspector.CompareWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Compare MOFs"
+        Height="700"
+        Width="1200"
+        Background="LightBlue"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Status -->
+            <RowDefinition Height="Auto"/>
+            <!-- File selectors -->
+            <RowDefinition Height="Auto"/>
+            <!-- Filters -->
+            <RowDefinition Height="*"/>
+            <!-- ListView -->
+        </Grid.RowDefinitions>
+
+        <!-- Status Text -->
+        <TextBlock Name="StatusText"
+                   Text=""
+                   FontWeight="Bold"
+                   Foreground="DarkBlue"
+                   Margin="0,0,0,10"
+                   Grid.Row="0"
+                   HorizontalAlignment="Left"/>
+
+        <!-- File selectors -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
+            <TextBox Name="FilePath1" Width="400" Margin="0,0,10,0"/>
+            <Button Content="Browse..." Width="80" Click="Browse1_Click"/>
+            <TextBox Name="FilePath2" Width="400" Margin="10,0,10,0"/>
+            <Button Content="Browse..." Width="80" Click="Browse2_Click"/>
+            <Button Content="Compare" Width="100" Margin="10,0,0,0" Click="Compare_Click"/>
+        </StackPanel>
+
+        <!-- Filter checkboxes -->
+        <UniformGrid Rows="1" Columns="4" Margin="0,0,0,10" Grid.Row="2">
+            <CheckBox Name="ShowDifferencesCheckBox" Content="Show Differences" Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="ShowMissingCheckBox" Content="Show Missing" Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="ShowMatchesCheckBox" Content="Show Matches" Checked="FilterResults" Unchecked="FilterResults"/>
+            <Button Content="Reset Filters" Width="120" Click="ResetFilters_Click"/>
+        </UniformGrid>
+
+        <!-- Differences List -->
+        <ListView Grid.Row="3"
+          Name="DifferencesList"
+          VerticalAlignment="Stretch"
+          HorizontalAlignment="Stretch"
+          ScrollViewer.VerticalScrollBarVisibility="Auto"
+          ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate>
+                            <Expander Header="{Binding Name}" IsExpanded="True">
+                                <ItemsPresenter/>
+                            </Expander>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                    <GroupStyle.Panel>
+                        <ItemsPanelTemplate>
+                            <StackPanel/>
+                        </ItemsPanelTemplate>
+                    </GroupStyle.Panel>
+                </GroupStyle>
+
+            </ListView.GroupStyle>
+
+            <!-- Row Styling -->
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Status}" Value="Match">
+                            <Setter Property="Background" Value="LightGreen"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Different">
+                            <Setter Property="Background" Value="LightCoral"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
+                            <Setter Property="Background" Value="LightSalmon"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
+                            <Setter Property="Background" Value="LightSalmon"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Rule ID" Width="200" DisplayMemberBinding="{Binding RuleId}"/>
+                    <GridViewColumn Header="Status" Width="200" DisplayMemberBinding="{Binding Status}"/>
+                    <GridViewColumn Header="Details" Width="600" DisplayMemberBinding="{Binding Details}"/>
+                </GridView>
+            </ListView.View>
+
+        </ListView>
+    </Grid>
+</Window>
