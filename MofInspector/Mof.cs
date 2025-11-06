@@ -57,7 +57,7 @@ namespace MofInspector
                     if (parts.Length == 2)
                     {
                         var key = parts[0].Trim();
-                        var value = parts[1].Trim().TrimEnd(';').Trim('"');
+                        var value = parts[1].Trim().TrimEnd(';').Trim().Trim('"');
                         currentInstance.Properties[key] = value;
                     }
                 }
@@ -65,6 +65,7 @@ namespace MofInspector
 
             BuildRulesFromInstances();
         }
+
 
         private void BuildRulesFromInstances()
         {
@@ -83,14 +84,36 @@ namespace MofInspector
                             {
                                 RuleId = ruleId,
                                 IsSkipped = resourceId.Contains("[Skip]"),
+                                Category = ExtractCategory(resourceId),
                                 Details = new Dictionary<string, string>()
                             };
                         }
+
+                        // Add all properties from this instance to Details
+                        foreach (var kvp in instance.Properties)
+                        {
+                            // Avoid overwriting if property already exists
+                            if (!ruleMap[ruleId].Details.ContainsKey(kvp.Key))
+                            {
+                                ruleMap[ruleId].Details[kvp.Key] = kvp.Value;
+                            }
+                        }
+
+                        // Optionally store raw text for fallback diff
+                        ruleMap[ruleId].RawText = string.Join(Environment.NewLine,
+                            instance.Properties.Select(p => $"{p.Key} = {p.Value}"));
                     }
                 }
             }
 
             Rules = ruleMap.Values.OrderBy(r => r.RuleId).ToList();
+
+        }
+
+        private string ExtractCategory(string resourceId)
+        {
+            var match = Regex.Match(resourceId, @"\[(.*?)\]");
+            return match.Success ? match.Groups[1].Value : "Unknown";
         }
 
         public List<string> ExtractRuleIds(string resourceId)
