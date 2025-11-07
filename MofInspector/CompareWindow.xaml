@@ -30,44 +30,70 @@
 
         <!-- File selectors -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
-            <TextBox Name="FilePath1" Width="400" Margin="0,0,10,0"/>
-            <Button Content="Browse..." Width="80" Click="Browse1_Click"/>
-            <TextBox Name="FilePath2" Width="400" Margin="10,0,10,0"/>
-            <Button Content="Browse..." Width="80" Click="Browse2_Click"/>
-            <Button Content="Compare" Width="100" Margin="10,0,0,0" Click="Compare_Click"/>
+            <!-- File 1 -->
+            <StackPanel Orientation="Vertical" Margin="0,0,10,0">
+                <TextBlock Text="File1" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="FilePath1" Grid.Column="0" Margin="0,0,10,0" Width="400" Height="25"/>
+                    <Button Content="Browse..." Grid.Column="1" Width="80" Height="30" Click="Browse1_Click"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- File 2 -->
+            <StackPanel Orientation="Vertical" Margin="10,0,10,0">
+                <TextBlock Text="File2" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="FilePath2" Grid.Column="0" Margin="0,0,10,0" Width="400" Height="25"/>
+                    <Button Content="Browse..." Grid.Column="1" Width="80" Height="30" Click="Browse2_Click"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Compare Button -->
+            <StackPanel Orientation="Vertical" Margin="10,0,0,0" VerticalAlignment="Bottom">
+                <Button Content="Compare" Width="100" Height="30" Click="Compare_Click"/>
+            </StackPanel>
         </StackPanel>
 
         <!-- Filter checkboxes -->
-        <UniformGrid Rows="1" Columns="4" Margin="0,0,0,10" Grid.Row="2">
+        <UniformGrid Rows="1" Columns="5" Margin="0,0,0,10" Grid.Row="2">
             <CheckBox Name="ShowDifferencesCheckBox" Content="Show Differences" Checked="FilterResults" Unchecked="FilterResults"/>
             <CheckBox Name="ShowMissingCheckBox" Content="Show Missing" Checked="FilterResults" Unchecked="FilterResults"/>
             <CheckBox Name="ShowMatchesCheckBox" Content="Show Matches" Checked="FilterResults" Unchecked="FilterResults"/>
-            <Button Content="Reset Filters" Width="120" Click="ResetFilters_Click"/>
+            <CheckBox Name="CollapseAllCheckBox" Content="Collapse All" Checked="CollapseAll_Checked" Unchecked="CollapseAll_Checked"/>
+            <!--<Button Content="Reset Filters" Width="120" Click="ResetFilters_Click"/>-->
         </UniformGrid>
 
         <!-- Differences List -->
         <ListView Grid.Row="3"
-          Name="DifferencesList"
-          VerticalAlignment="Stretch"
-          HorizontalAlignment="Stretch"
-          ScrollViewer.VerticalScrollBarVisibility="Auto"
-          ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                  Name="DifferencesList"
+                  VerticalAlignment="Stretch"
+                  HorizontalAlignment="Stretch"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
             <ListView.GroupStyle>
                 <GroupStyle>
-                    <GroupStyle.HeaderTemplate>
-                        <DataTemplate>
-                            <Expander Header="{Binding Name}" IsExpanded="True">
-                                <ItemsPresenter/>
-                            </Expander>
-                        </DataTemplate>
-                    </GroupStyle.HeaderTemplate>
-                    <GroupStyle.Panel>
-                        <ItemsPanelTemplate>
-                            <StackPanel/>
-                        </ItemsPanelTemplate>
-                    </GroupStyle.Panel>
+                    <GroupStyle.ContainerStyle>
+                        <Style TargetType="GroupItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="GroupItem">
+                                        <Expander Header="{Binding Name}" IsExpanded="True">
+                                            <ItemsPresenter/>
+                                        </Expander>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.ContainerStyle>
                 </GroupStyle>
-
             </ListView.GroupStyle>
 
             <!-- Row Styling -->
@@ -97,7 +123,7 @@
                     <GridViewColumn Header="Details" Width="600" DisplayMemberBinding="{Binding Details}"/>
                 </GridView>
             </ListView.View>
-
         </ListView>
     </Grid>
+
 </Window>
