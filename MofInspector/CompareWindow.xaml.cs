@@ -5,7 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace MofInspector
 {
@@ -151,6 +153,39 @@ namespace MofInspector
         {
             if (string.IsNullOrEmpty(input)) return "EMPTY";
             return input.Length <= length ? input : input.Substring(0, length) + "...";
+        }
+
+
+        private void CollapseAll_Checked(object sender, RoutedEventArgs e)
+        {
+            bool collapse = CollapseAllCheckBox.IsChecked == true;
+
+            foreach (var expander in FindVisualChildren<Expander>(DifferencesList))
+            {
+                expander.IsExpanded = !collapse;
+            }
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child is T t)
+                    {
+                        yield return t;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
+
+
         }
 
 
