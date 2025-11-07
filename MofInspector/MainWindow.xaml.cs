@@ -46,5 +46,13 @@ namespace MofInspector
         }
 
 
+        private void Compare_Click(object sender, RoutedEventArgs e)
+        {
+            var compareWindow = new CompareWindow();
+            compareWindow.Owner = this;
+            compareWindow.ShowDialog();
+        }
+
+
+        }
     }
-}
