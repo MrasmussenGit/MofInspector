@@ -1,0 +1,1121 @@
+﻿# ========= MofInspector source bundle =========
+# Generated: 2025-11-10 11:58:10 -05:00
+# Root: C:\VS2022\MofInspector\MofInspector
+# Files: 21
+# Includes: *.cs, *.xaml
+# Excludes: bin, obj, .git, .vs, .vscode, packages ; generated: *.g.cs, *.g.i.cs, *.designer.cs
+
+===== BEGIN FILE: .\App.xaml =====
+
+<Application x:Class="MofInspector.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:MofInspector"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
+
+
+===== END FILE: .\App.xaml =====
+
+
+===== BEGIN FILE: .\MainWindow.xaml =====
+
+<Window x:Class="MofInspector.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Utility App"
+        Height="250" Width="220"
+        Background="LightBlue"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None">
+    <Grid>
+        <Border BorderBrush="DarkBlue" BorderThickness="2" CornerRadius="8" Padding="10" Margin="10">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Button Content="Inspect MOF" Width="150" Height="40" Margin="0,0,0,10" Click="InspectMof_Click"/>
+                <Button Content="Compare" Width="150" Height="40" Margin="0,0,0,10" Click="Compare_Click"/>
+                <Button Content="Edit" Width="150" Height="40" Margin="0,0,0,10"/>
+                <Button Content="Exit" Width="150" Height="40" Background="DarkRed" Foreground="White" Click="Exit_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
+
+
+===== END FILE: .\MainWindow.xaml =====
+
+
+===== BEGIN FILE: .\App.xaml.cs =====
+
+using System.Configuration;
+using System.Data;
+using System.Windows;
+
+namespace MofInspector
+{
+    /// <summary>
+    /// Interaction logic for App.xaml
+    /// </summary>
+    public partial class App : Application
+    {
+    }
+
+}
+
+
+===== END FILE: .\App.xaml.cs =====
+
+
+===== BEGIN FILE: .\AssemblyInfo.cs =====
+
+using System.Windows;
+
+[assembly: ThemeInfo(
+    ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located
+                                                //(used if a resource is not found in the page,
+                                                // or application resource dictionaries)
+    ResourceDictionaryLocation.SourceAssembly   //where the generic resource dictionary is located
+                                                //(used if a resource is not found in the page,
+                                                // app, or any theme specific resource dictionaries)
+)]
+
+
+===== END FILE: .\AssemblyInfo.cs =====
+
+
+===== BEGIN FILE: .\CompareWindow.xaml =====
+
+<Window x:Class="MofInspector.CompareWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Compare MOFs"
+        Height="700"
+        Width="1200"
+        Background="LightBlue"
+        WindowStartupLocation="CenterOwner">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Status -->
+            <RowDefinition Height="Auto"/>
+            <!-- File selectors -->
+            <RowDefinition Height="Auto"/>
+            <!-- Filters -->
+            <RowDefinition Height="*"/>
+            <!-- ListView -->
+        </Grid.RowDefinitions>
+
+        <!-- Status Text -->
+        <TextBlock Name="StatusText"
+                   Text=""
+                   FontWeight="Bold"
+                   Foreground="DarkBlue"
+                   Margin="0,0,0,10"
+                   Grid.Row="0"
+                   HorizontalAlignment="Left"/>
+
+        <!-- File selectors -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
+            <!-- File 1 -->
+            <StackPanel Orientation="Vertical" Margin="0,0,10,0">
+                <TextBlock Text="File1" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="FilePath1" Grid.Column="0" Margin="0,0,10,0" Width="400" Height="25"/>
+                    <Button Content="Browse..." Grid.Column="1" Width="80" Height="30" Click="Browse1_Click"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- File 2 -->
+            <StackPanel Orientation="Vertical" Margin="10,0,10,0">
+                <TextBlock Text="File2" Margin="0,0,0,5"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Name="FilePath2" Grid.Column="0" Margin="0,0,10,0" Width="400" Height="25"/>
+                    <Button Content="Browse..." Grid.Column="1" Width="80" Height="30" Click="Browse2_Click"/>
+                </Grid>
+            </StackPanel>
+
+            <!-- Compare Button -->
+            <StackPanel Orientation="Vertical" Margin="10,0,0,0" VerticalAlignment="Bottom">
+                <Button Content="Compare" Width="100" Height="30" Click="Compare_Click"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Filter checkboxes -->
+        <UniformGrid Rows="1" Columns="5" Margin="0,0,0,10" Grid.Row="2">
+            <CheckBox Name="ShowDifferencesCheckBox" Content="Show Differences" Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="ShowMissingCheckBox" Content="Show Missing" Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="ShowMatchesCheckBox" Content="Show Matches" Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="CollapseAllCheckBox" Content="Collapse All" Checked="CollapseAll_Checked" Unchecked="CollapseAll_Checked"/>
+            <!--<Button Content="Reset Filters" Width="120" Click="ResetFilters_Click"/>-->
+        </UniformGrid>
+
+        <!-- Differences List -->
+        <ListView Grid.Row="3"
+                  Name="DifferencesList"
+                  VerticalAlignment="Stretch"
+                  HorizontalAlignment="Stretch"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto"
+                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.ContainerStyle>
+                        <Style TargetType="GroupItem">
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="GroupItem">
+                                        <Expander Header="{Binding Name}" IsExpanded="True">
+                                            <ItemsPresenter/>
+                                        </Expander>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </GroupStyle.ContainerStyle>
+                </GroupStyle>
+            </ListView.GroupStyle>
+
+            <!-- Row Styling -->
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Status}" Value="Match">
+                            <Setter Property="Background" Value="LightGreen"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Different">
+                            <Setter Property="Background" Value="LightCoral"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
+                            <Setter Property="Background" Value="LightSalmon"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
+                            <Setter Property="Background" Value="LightSalmon"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.ItemContainerStyle>
+
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Rule ID" Width="200" DisplayMemberBinding="{Binding RuleId}"/>
+                    <GridViewColumn Header="Status" Width="200" DisplayMemberBinding="{Binding Status}"/>
+                    <GridViewColumn Header="Details" Width="600" DisplayMemberBinding="{Binding Details}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+
+</Window>
+
+
+===== END FILE: .\CompareWindow.xaml =====
+
+
+===== BEGIN FILE: .\CompareWindow.xaml.cs =====
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Media;
+
+namespace MofInspector
+{
+    public partial class CompareWindow : Window
+    {
+        private Mof mof1;
+        private Mof mof2;
+        private List<dynamic> allResults = new List<dynamic>();
+
+        public CompareWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Browse1_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                FilePath1.Text = dlg.FileName;
+            }
+        }
+
+        private void Browse2_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                FilePath2.Text = dlg.FileName;
+            }
+        }
+
+        private async void Compare_Click(object sender, RoutedEventArgs e)
+        {
+            if (!File.Exists(FilePath1.Text) || !File.Exists(FilePath2.Text))
+            {
+                MessageBox.Show("Please select both MOF files.");
+                return;
+            }
+
+            // Capture file paths before async work
+            string path1 = FilePath1.Text;
+            string path2 = FilePath2.Text;
+
+            // Show progress
+            StatusText.Text = "Loading files...";
+            DifferencesList.ItemsSource = null;
+
+            // Parse MOF files on background thread
+            await Task.Run(() =>
+            {
+                mof1 = new Mof(path1);
+                mof2 = new Mof(path2);
+            });
+
+            StatusText.Text = "Building comparison...";
+            BuildComparisonResults();
+            ApplyFilters();
+
+            StatusText.Text = "Comparison complete.";
+        }
+        private void BuildComparisonResults()
+        {
+            allResults.Clear();
+
+            var allRuleIds = mof1.Rules.Select(r => r.RuleId)
+                .Union(mof2.Rules.Select(r => r.RuleId))
+                .Distinct();
+
+            foreach (var ruleId in allRuleIds)
+            {
+                var rule1 = mof1.Rules.FirstOrDefault(r => r.RuleId == ruleId);
+                var rule2 = mof2.Rules.FirstOrDefault(r => r.RuleId == ruleId);
+
+                string category = rule1?.Category ?? rule2?.Category ?? "Unknown";
+
+                // Handle missing rules
+                if (rule1 == null)
+                {
+                    allResults.Add(new { RuleId = ruleId, Status = "Missing in File 1", Details = "", Category = category });
+                    continue;
+                }
+                if (rule2 == null)
+                {
+                    allResults.Add(new { RuleId = ruleId, Status = "Missing in File 2", Details = "", Category = category });
+                    continue;
+                }
+
+                // Handle null or empty Details
+                if (rule1.Details == null || rule2.Details == null || rule1.Details.Count == 0 || rule2.Details.Count == 0)
+                {
+                    string rawDiff = GetRawTextDiff(rule1.RawText, rule2.RawText);
+                    allResults.Add(new
+                    {
+                        RuleId = ruleId,
+                        Status = "Parsing Error",
+                        Details = $"One or both rules have no parsed details. Raw diff: {rawDiff}",
+                        Category = category
+                    });
+                    continue;
+                }
+
+                // Compare Details dictionaries
+                bool areEqual = rule1.Details.Count == rule2.Details.Count &&
+                                rule1.Details.All(kvp =>
+                                    rule2.Details.TryGetValue(kvp.Key, out var val) &&
+                                    string.Equals(val?.Trim(), kvp.Value?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+                if (areEqual)
+                {
+                    allResults.Add(new { RuleId = ruleId, Status = "Match", Details = "All properties identical", Category = category });
+                }
+                else
+                {
+                    // Build detailed differences
+                    var diffDetails = string.Join(", ",
+                        rule1.Details.Where(kvp => !rule2.Details.ContainsKey(kvp.Key) || rule2.Details[kvp.Key] != kvp.Value)
+                                     .Select(kvp => $"{kvp.Key}: {kvp.Value} vs {rule2.Details.GetValueOrDefault(kvp.Key, "N/A")}")
+                        .Concat(rule2.Details.Where(kvp => !rule1.Details.ContainsKey(kvp.Key))
+                                     .Select(kvp => $"{kvp.Key}: N/A vs {kvp.Value}")));
+
+                    allResults.Add(new { RuleId = ruleId, Status = "Different", Details = diffDetails, Category = category });
+                }
+            }
+        }
+
+        // Simple raw text diff fallback
+        private string GetRawTextDiff(string text1, string text2)
+        {
+            if (string.Equals(text1, text2, StringComparison.Ordinal))
+                return "Raw text identical";
+
+            return $"RawText differs. File1: {Truncate(text1)}, File2: {Truncate(text2)}";
+        }
+
+        private string Truncate(string input, int length = 100)
+        {
+            if (string.IsNullOrEmpty(input)) return "EMPTY";
+            return input.Length <= length ? input : input.Substring(0, length) + "...";
+        }
+
+
+        private void CollapseAll_Checked(object sender, RoutedEventArgs e)
+        {
+            bool collapse = CollapseAllCheckBox.IsChecked == true;
+
+            foreach (var expander in FindVisualChildren<Expander>(DifferencesList))
+            {
+                expander.IsExpanded = !collapse;
+            }
+        }
+
+        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
+                {
+                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
+                    if (child is T t)
+                    {
+                        yield return t;
+                    }
+
+                    foreach (T childOfChild in FindVisualChildren<T>(child))
+                    {
+                        yield return childOfChild;
+                    }
+                }
+            }
+
+
+        }
+
+
+        private void FilterResults(object sender, RoutedEventArgs e)
+        {
+            ApplyFilters();
+        }
+
+        private void ApplyFilters()
+        {
+            var filtered = allResults.Where(x =>
+                (ShowDifferencesCheckBox.IsChecked == true && x.Status == "Different") ||
+                (ShowMissingCheckBox.IsChecked == true && x.Status.StartsWith("Missing")) ||
+                (ShowMatchesCheckBox.IsChecked == true && x.Status == "Match") ||
+                (ShowDifferencesCheckBox.IsChecked == false && ShowMissingCheckBox.IsChecked == false && ShowMatchesCheckBox.IsChecked == false)
+            ).ToList();
+
+            var view = new ListCollectionView(filtered);
+            view.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
+            DifferencesList.ItemsSource = view;
+        }
+
+        private void ResetFilters_Click(object sender, RoutedEventArgs e)
+        {
+            ShowDifferencesCheckBox.IsChecked = false;
+            ShowMissingCheckBox.IsChecked = false;
+            ShowMatchesCheckBox.IsChecked = false;
+            ApplyFilters();
+        }
+    }
+}
+
+
+===== END FILE: .\CompareWindow.xaml.cs =====
+
+
+===== BEGIN FILE: .\InspectWindow.xaml =====
+
+<Window x:Class="MofInspector.InspectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MOF Inspection" Height="600" Width="900"
+        WindowStartupLocation="CenterOwner"
+        Background="LightBlue">
+
+    <!-- Overwrite TreeViewItem style -->
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Top controls -->
+            <RowDefinition Height="Auto"/>
+            <!-- Filter checkbox -->
+            <RowDefinition Height="*"/>
+            <!-- Main content -->
+        </Grid.RowDefinitions>
+
+        <!-- Top controls -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0">
+            <TextBox Name="FilePathBox" Width="500" Margin="0,0,10,0" Background="LightBlue"/>
+            <Button Content="Browse..." Width="80" Click="Browse_Click"/>
+            <Button Content="Load" Width="60" Margin="10,0,0,0" Click="Load_Click"/>
+            <Label Name="RuleCountLabel" FontWeight="Bold" Margin="20,0,0,0"/>
+        </StackPanel>
+
+        <!-- Filter checkbox -->
+        <CheckBox Name="ShowSkippedCheckBox"
+              Grid.Row="1"
+              Content="Show only skipped rules"
+              Margin="0,0,0,10"
+              Checked="FilterRules"
+              Unchecked="FilterRules"/>
+
+        <!-- Main content: TreeView + Details -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- TreeView -->
+            <TreeView Name="RuleTree"
+                  Grid.Column="0"
+                  SelectedItemChanged="RuleTree_SelectedItemChanged"
+                  Background="LightBlue"/>
+
+            <!-- Details panel -->
+            <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="10,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="Details" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
+                    <ListView Name="DetailsList">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Property" Width="200" DisplayMemberBinding="{Binding Key}"/>
+                                <GridViewColumn Header="Value" Width="400" DisplayMemberBinding="{Binding Value}"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+
+</Window>
+
+
+===== END FILE: .\InspectWindow.xaml =====
+
+
+===== BEGIN FILE: .\InspectWindow.xaml.cs =====
+
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+
+namespace MofInspector
+{
+    public partial class InspectWindow : Window
+    {
+        private Mof mof;
+
+        public InspectWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Browse_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*",
+                Title = "Select a MOF File"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                FilePathBox.Text = dialog.FileName;
+                LoadMofFile(dialog.FileName);
+            }
+        }
+
+        private void Load_Click(object sender, RoutedEventArgs e)
+        {
+            if (!string.IsNullOrWhiteSpace(FilePathBox.Text))
+            {
+                LoadMofFile(FilePathBox.Text);
+            }
+            else
+            {
+                MessageBox.Show("Please enter or select a file path.");
+            }
+        }
+
+        private void LoadMofFile(string filePath)
+        {
+            try
+            {
+                mof = new Mof(filePath);
+                RuleTree.Items.Clear();
+
+                RuleCountLabel.Content = $"Total Rules: {mof.Rules.Count}";
+
+                var rulesRoot = new TreeViewItem { Header = $"Rules ({mof.Rules.Count})" };
+
+                foreach (var rule in mof.Rules.OrderBy(r => r.RuleId))
+                {
+                    var ruleNode = new TreeViewItem
+                    {
+                        Header = rule.RuleId,
+                        Foreground = rule.IsSkipped ? Brushes.Red : Brushes.Green,
+                        Tag = rule // store rule object for selection
+                    };
+
+                    rulesRoot.Items.Add(ruleNode);
+                }
+
+                RuleTree.Items.Add(rulesRoot);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading MOF: {ex.Message}");
+            }
+        }
+
+        private void FilterRules(object sender, RoutedEventArgs e)
+        {
+            if (mof == null) return;
+
+            RuleTree.Items.Clear();
+
+            var filteredRules = ShowSkippedCheckBox.IsChecked == true
+                ? mof.Rules.Where(r => r.IsSkipped).OrderBy(r => r.RuleId)
+                : mof.Rules.OrderBy(r => r.RuleId);
+
+            var rulesRoot = new TreeViewItem { Header = $"Rules ({filteredRules.Count()})" };
+
+            foreach (var rule in filteredRules)
+            {
+                var ruleNode = new TreeViewItem
+                {
+                    Header = rule.RuleId,
+                    Foreground = rule.IsSkipped ? Brushes.Red : Brushes.Black,
+                    Tag = rule
+                };
+
+                rulesRoot.Items.Add(ruleNode);
+            }
+
+            RuleTree.Items.Add(rulesRoot);
+        }
+
+
+        private void RuleTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            DetailsList.Items.Clear();
+
+            if (e.NewValue is TreeViewItem selectedNode && selectedNode.Tag is MofRule selectedRule)
+            {
+                // Show rule details first
+                foreach (var detail in selectedRule.Details)
+                {
+                    DetailsList.Items.Add(new KeyValuePair<string, string>(detail.Key, detail.Value));
+                }
+
+                // Show related instances
+                var relatedInstances = mof.Instances
+                    .Where(inst => inst.Properties.TryGetValue("ResourceID", out var rid) &&
+                                   mof.ExtractRuleIds(rid).Contains(selectedRule.RuleId))
+                    .ToList();
+
+                foreach (var inst in relatedInstances)
+                {
+                    DetailsList.Items.Add(new KeyValuePair<string, string>("Instance", inst.ClassName));
+                    foreach (var prop in inst.Properties)
+                    {
+                        DetailsList.Items.Add(new KeyValuePair<string, string>(prop.Key, prop.Value));
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+===== END FILE: .\InspectWindow.xaml.cs =====
+
+
+===== BEGIN FILE: .\MainWindow.xaml.cs =====
+
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace MofInspector
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            this.MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.ButtonState == MouseButtonState.Pressed)
+                    DragMove();
+            };
+
+        }
+
+
+        private void InspectMof_Click(object sender, RoutedEventArgs e)
+        {
+
+            var inspectWindow = new InspectWindow
+            {
+                Owner = this // Makes the new window open on top of the menu window
+            };
+            inspectWindow.ShowDialog();
+        }
+
+
+        private void Exit_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+
+
+        private void Compare_Click(object sender, RoutedEventArgs e)
+        {
+            var compareWindow = new CompareWindow();
+            compareWindow.Owner = this;
+            compareWindow.ShowDialog();
+        }
+
+
+        }
+    }
+
+===== END FILE: .\MainWindow.xaml.cs =====
+
+
+===== BEGIN FILE: .\Mof.cs =====
+
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace MofInspector
+{
+    public class Mof
+    {
+        public List<MofInstance> Instances { get; private set; } = new List<MofInstance>();
+        public List<MofRule> Rules { get; private set; } = new List<MofRule>();
+
+        public Mof(string filePath)
+        {
+            if (!File.Exists(filePath))
+                throw new FileNotFoundException("MOF file not found.", filePath);
+
+            ParseMofFile(filePath);
+        }
+
+        private void ParseMofFile(string filePath)
+        {
+            var lines = File.ReadAllLines(filePath);
+            MofInstance currentInstance = null;
+
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+
+                // Detect start of instance
+                if (trimmed.StartsWith("instance of"))
+                {
+                    currentInstance = new MofInstance
+                    {
+                        ClassName = trimmed.Split(' ')[2]
+                    };
+                    continue;
+                }
+
+                // Detect end of instance
+                if (trimmed.StartsWith("};"))
+                {
+                    if (currentInstance != null)
+                    {
+                        Instances.Add(currentInstance);
+                        currentInstance = null;
+                    }
+                    continue;
+                }
+
+                // Parse properties inside instance
+                if (currentInstance != null && trimmed.Contains("="))
+                {
+                    var parts = trimmed.Split(new[] { '=' }, 2);
+                    if (parts.Length == 2)
+                    {
+                        var key = parts[0].Trim();
+                        var value = parts[1].Trim().TrimEnd(';').Trim().Trim('"');
+                        currentInstance.Properties[key] = value;
+                    }
+                }
+            }
+
+            BuildRulesFromInstances();
+        }
+
+
+        private void BuildRulesFromInstances()
+        {
+            var ruleMap = new Dictionary<string, MofRule>();
+
+            foreach (var instance in Instances)
+            {
+                if (instance.Properties.TryGetValue("ResourceID", out var resourceId))
+                {
+                    var ruleIds = ExtractRuleIds(resourceId);
+                    foreach (var ruleId in ruleIds)
+                    {
+                        if (!ruleMap.ContainsKey(ruleId))
+                        {
+                            ruleMap[ruleId] = new MofRule
+                            {
+                                RuleId = ruleId,
+                                IsSkipped = resourceId.Contains("[Skip]"),
+                                Category = ExtractCategory(resourceId),
+                                Details = new Dictionary<string, string>()
+                            };
+                        }
+
+                        // Add all properties from this instance to Details
+                        foreach (var kvp in instance.Properties)
+                        {
+                            // Avoid overwriting if property already exists
+                            if (!ruleMap[ruleId].Details.ContainsKey(kvp.Key))
+                            {
+                                ruleMap[ruleId].Details[kvp.Key] = kvp.Value;
+                            }
+                        }
+
+                        // Optionally store raw text for fallback diff
+                        ruleMap[ruleId].RawText = string.Join(Environment.NewLine,
+                            instance.Properties.Select(p => $"{p.Key} = {p.Value}"));
+                    }
+                }
+            }
+
+            Rules = ruleMap.Values.OrderBy(r => r.RuleId).ToList();
+
+        }
+
+        private string ExtractCategory(string resourceId)
+        {
+            var match = Regex.Match(resourceId, @"\[(.*?)\]");
+            return match.Success ? match.Groups[1].Value : "Unknown";
+        }
+
+        public List<string> ExtractRuleIds(string resourceId)
+        {
+            var ruleIds = new List<string>();
+            if (string.IsNullOrEmpty(resourceId)) return ruleIds;
+
+            // Matches V-218743 or V-218743.a or V-218743.b etc.
+            var matches = Regex.Matches(resourceId, @"V-\d+(\.\w+)?");
+            foreach (Match match in matches)
+            {
+                ruleIds.Add(match.Value);
+            }
+            return ruleIds;
+        }
+    }
+}
+
+
+===== END FILE: .\Mof.cs =====
+
+
+===== BEGIN FILE: .\MofInstance.cs =====
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MofInspector
+{
+
+    public class MofInstance
+    {
+        public string ClassName { get; set; }
+        public string InstanceName { get; set; }
+        public Dictionary<string, string> Properties { get; set; } = new Dictionary<string, string>();
+    }
+
+}
+
+
+===== END FILE: .\MofInstance.cs =====
+
+
+===== BEGIN FILE: .\MofRule.cs =====
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace MofInspector
+{
+    public class MofRule
+    {
+        public string RuleId { get; set; }
+        public bool IsSkipped { get; set; }
+        public string Category { get; set; } // e.g., DotNetFramework or InternetExplorer
+        public Dictionary<string, string> Details { get; set; } = new Dictionary<string, string>();
+        public string RawText { get; set; } // Original MOF text for fallback diff
+    }
+
+}
+
+
+===== END FILE: .\MofRule.cs =====
+
+
+===== BEGIN FILE: .\obj\Debug\net8.0-windows\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
+
+
+===== END FILE: .\obj\Debug\net8.0-windows\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+
+===== BEGIN FILE: .\obj\Debug\net8.0-windows\MofInspector.AssemblyInfo.cs =====
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a18f4cd44205395e8298d469ddb81313a48e155e")]
+[assembly: System.Reflection.AssemblyProductAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyTitleAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+
+===== END FILE: .\obj\Debug\net8.0-windows\MofInspector.AssemblyInfo.cs =====
+
+
+===== BEGIN FILE: .\obj\Debug\net8.0-windows\MofInspector_ge0w2vrt_wpftmp.AssemblyInfo.cs =====
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyProductAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyTitleAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+
+===== END FILE: .\obj\Debug\net8.0-windows\MofInspector_ge0w2vrt_wpftmp.AssemblyInfo.cs =====
+
+
+===== BEGIN FILE: .\obj\Release\net8.0-windows\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
+
+
+===== END FILE: .\obj\Release\net8.0-windows\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+
+===== BEGIN FILE: .\obj\Release\net8.0-windows\MofInspector.AssemblyInfo.cs =====
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+af9ed10d32bc4ce2184c47e3424eb636617f193b")]
+[assembly: System.Reflection.AssemblyProductAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyTitleAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+
+===== END FILE: .\obj\Release\net8.0-windows\MofInspector.AssemblyInfo.cs =====
+
+
+===== BEGIN FILE: .\obj\Release\net8.0-windows\win-x64\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
+
+
+===== END FILE: .\obj\Release\net8.0-windows\win-x64\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+
+===== BEGIN FILE: .\obj\Release\net8.0-windows\win-x64\MofInspector.AssemblyInfo.cs =====
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+af9ed10d32bc4ce2184c47e3424eb636617f193b")]
+[assembly: System.Reflection.AssemblyProductAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyTitleAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+
+===== END FILE: .\obj\Release\net8.0-windows\win-x64\MofInspector.AssemblyInfo.cs =====
+
+
+===== BEGIN FILE: .\obj\Release\net8.0-windows\win-x86\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+// <autogenerated />
+using System;
+using System.Reflection;
+[assembly: global::System.Runtime.Versioning.TargetFrameworkAttribute(".NETCoreApp,Version=v8.0", FrameworkDisplayName = ".NET 8.0")]
+
+
+===== END FILE: .\obj\Release\net8.0-windows\win-x86\.NETCoreApp,Version=v8.0.AssemblyAttributes.cs =====
+
+
+===== BEGIN FILE: .\obj\Release\net8.0-windows\win-x86\MofInspector.AssemblyInfo.cs =====
+
+//------------------------------------------------------------------------------
+// <auto-generated>
+//     This code was generated by a tool.
+//     Runtime Version:4.0.30319.42000
+//
+//     Changes to this file may cause incorrect behavior and will be lost if
+//     the code is regenerated.
+// </auto-generated>
+//------------------------------------------------------------------------------
+
+using System;
+using System.Reflection;
+
+[assembly: System.Reflection.AssemblyCompanyAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyProductAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyTitleAttribute("MofInspector")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
+[assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
+
+// Generated by the MSBuild WriteCodeFragment class.
+
+
+
+===== END FILE: .\obj\Release\net8.0-windows\win-x86\MofInspector.AssemblyInfo.cs =====
+
