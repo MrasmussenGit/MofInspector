@@ -21,12 +21,12 @@
 
         <!-- Status Text -->
         <TextBlock Name="StatusText"
-                   Text=""
-                   FontWeight="Bold"
-                   Foreground="DarkBlue"
-                   Margin="0,0,0,10"
-                   Grid.Row="0"
-                   HorizontalAlignment="Left"/>
+               Text=""
+               FontWeight="Bold"
+               Foreground="DarkBlue"
+               Margin="0,0,0,10"
+               Grid.Row="0"
+               HorizontalAlignment="Left"/>
 
         <!-- File selectors -->
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
@@ -64,20 +64,26 @@
 
         <!-- Filter checkboxes -->
         <UniformGrid Rows="1" Columns="5" Margin="0,0,0,10" Grid.Row="2">
-            <CheckBox Name="ShowDifferencesCheckBox" Content="Show Differences" Checked="FilterResults" Unchecked="FilterResults"/>
-            <CheckBox Name="ShowMissingCheckBox" Content="Show Missing" Checked="FilterResults" Unchecked="FilterResults"/>
-            <CheckBox Name="ShowMatchesCheckBox" Content="Show Matches" Checked="FilterResults" Unchecked="FilterResults"/>
-            <CheckBox Name="CollapseAllCheckBox" Content="Collapse All" Checked="CollapseAll_Checked" Unchecked="CollapseAll_Checked"/>
-            <!--<Button Content="Reset Filters" Width="120" Click="ResetFilters_Click"/>-->
+            <CheckBox Name="ShowDifferencesCheckBox" Content="Show Differences"
+                Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="ShowMissingCheckBox" Content="Show Missing"
+                Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="ShowMatchesCheckBox" Content="Show Matches"
+                Checked="FilterResults" Unchecked="FilterResults"/>
+            <CheckBox Name="CollapseAllCheckBox" Content="Collapse All"
+                Checked="CollapseAll_Checked" Unchecked="CollapseAll_Checked"/>
+            <!-- <Button Content="Reset Filters" Width="120" Click="ResetFilters_Click"/> -->
         </UniformGrid>
 
         <!-- Differences List -->
         <ListView Grid.Row="3"
-                  Name="DifferencesList"
-                  VerticalAlignment="Stretch"
-                  HorizontalAlignment="Stretch"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+              Name="DifferencesList"
+              VerticalAlignment="Stretch"
+              HorizontalAlignment="Stretch"
+              ScrollViewer.VerticalScrollBarVisibility="Auto"
+              ScrollViewer.HorizontalScrollBarVisibility="Auto">
+
+            <!-- Grouping as Expanders -->
             <ListView.GroupStyle>
                 <GroupStyle>
                     <GroupStyle.ContainerStyle>
@@ -96,9 +102,12 @@
                 </GroupStyle>
             </ListView.GroupStyle>
 
-            <!-- Row Styling -->
+            <!-- Row Styling + Double-click handler -->
             <ListView.ItemContainerStyle>
                 <Style TargetType="ListViewItem">
+                    <!-- Double-click on a row -> open details window -->
+                    <EventSetter Event="MouseDoubleClick" Handler="DifferencesList_ItemDoubleClick"/>
+
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Status}" Value="Match">
                             <Setter Property="Background" Value="LightGreen"/>
@@ -116,6 +125,7 @@
                 </Style>
             </ListView.ItemContainerStyle>
 
+            <!-- Columns -->
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Rule ID" Width="200" DisplayMemberBinding="{Binding RuleId}"/>
@@ -125,5 +135,4 @@
             </ListView.View>
         </ListView>
     </Grid>
-
 </Window>
