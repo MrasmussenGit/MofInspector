@@ -46,48 +46,6 @@ namespace MofInspector
             }
         }
 
-        private void DifferencesList_ItemDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            if (DifferencesList.SelectedItem is null) return;
-
-            // The row items are anonymous objects; use dynamic to read RuleId
-            dynamic row = DifferencesList.SelectedItem;
-            string ruleId = row?.RuleId as string;
-            if (string.IsNullOrWhiteSpace(ruleId)) return;
-
-            // Resolve the rule from both files (may be null in Missing cases)
-            var rule1 = mof1?.Rules.FirstOrDefault(r => r.RuleId == ruleId);
-            var rule2 = mof2?.Rules.FirstOrDefault(r => r.RuleId == ruleId);
-
-            // Resolve contributing instances for each file
-            // (Instances where ResourceID contains this RuleId)
-            List<MofInstance> inst1 = new();
-            List<MofInstance> inst2 = new();
-
-            if (mof1 != null)
-            {
-                inst1 = mof1.Instances
-                    .Where(inst => inst.Properties.TryGetValue("ResourceID", out var rid)
-                                   && mof1.ExtractRuleIds(rid).Contains(ruleId))
-                    .ToList();
-            }
-            if (mof2 != null)
-            {
-                inst2 = mof2.Instances
-                    .Where(inst => inst.Properties.TryGetValue("ResourceID", out var rid)
-                                   && mof2.ExtractRuleIds(rid).Contains(ruleId))
-                    .ToList();
-            }
-
-            // Open the details dialog
-            var dlg = new CompareDetailWindow(ruleId, rule1, rule2, inst1, inst2)
-            {
-                Owner = this
-            };
-            dlg.ShowDialog();
-        }
-
-
         private async void Compare_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists(FilePath1.Text) || !File.Exists(FilePath2.Text))
