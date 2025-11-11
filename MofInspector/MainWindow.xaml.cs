@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Reflection;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -19,12 +20,17 @@ namespace MofInspector
         public MainWindow()
         {
             InitializeComponent();
-
             this.MouseLeftButtonDown += (s, e) =>
             {
                 if (e.ButtonState == MouseButtonState.Pressed)
                     DragMove();
             };
+
+            // Set version text
+            var infoVersion = System.Reflection.Assembly
+                .GetExecutingAssembly()
+                .GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+            VersionText.Text = $"Version {infoVersion ?? "1.0.0"}";
 
         }
 
