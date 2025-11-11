@@ -73,11 +73,14 @@
 
         <!-- Differences List -->
         <ListView Grid.Row="3"
-                  Name="DifferencesList"
-                  VerticalAlignment="Stretch"
-                  HorizontalAlignment="Stretch"
-                  ScrollViewer.VerticalScrollBarVisibility="Auto"
-                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+          Name="DifferencesList"
+          SelectionMode="Single"
+          VerticalAlignment="Stretch"
+          HorizontalAlignment="Stretch"
+          ScrollViewer.VerticalScrollBarVisibility="Auto"
+          ScrollViewer.HorizontalScrollBarVisibility="Auto"
+          MouseDoubleClick="DifferencesList_MouseDoubleClick"
+          KeyDown="DifferencesList_KeyDown">
             <ListView.GroupStyle>
                 <GroupStyle>
                     <GroupStyle.ContainerStyle>
