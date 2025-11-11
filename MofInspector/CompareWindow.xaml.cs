@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Input;
 
 namespace MofInspector
 {
@@ -44,6 +45,57 @@ namespace MofInspector
             {
                 FilePath2.Text = dlg.FileName;
             }
+        }
+
+
+        private void DifferencesList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            OpenSelectedRuleDetail();
+        }
+
+        private void DifferencesList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                OpenSelectedRuleDetail();
+                e.Handled = true;
+            }
+        }
+
+        private void OpenSelectedRuleDetail()
+        {
+            if (DifferencesList.SelectedItem == null)
+                return;
+
+            // Your ItemsSource rows are anonymous types with properties: RuleId, Status, Details, Category
+            var selected = DifferencesList.SelectedItem;
+            var ruleIdProp = selected.GetType().GetProperty("RuleId");
+            var ruleId = ruleIdProp?.GetValue(selected) as string;
+            if (string.IsNullOrWhiteSpace(ruleId))
+                return;
+
+            // Look up the corresponding rules in each MOF
+            var rule1 = mof1?.Rules.FirstOrDefault(r => r.RuleId == ruleId);
+            var rule2 = mof2?.Rules.FirstOrDefault(r => r.RuleId == ruleId);
+
+            // Collect contributing instances for that rule from each file
+            var instances1 = mof1?.Instances
+                .Where(inst => inst.Properties.TryGetValue("ResourceID", out var rid) &&
+                               mof1.ExtractRuleIds(rid).Contains(ruleId))
+                .ToList() ?? new List<MofInstance>();
+
+            var instances2 = mof2?.Instances
+                .Where(inst => inst.Properties.TryGetValue("ResourceID", out var rid) &&
+                               mof2.ExtractRuleIds(rid).Contains(ruleId))
+                .ToList() ?? new List<MofInstance>();
+
+            // NOTE: The class name is CompareDetailWindow (singular)
+            var details = new CompareDetailWindow(ruleId, rule1, rule2, instances1, instances2)
+            {
+                Owner = this
+            };
+            details.ShowDialog();
+
         }
 
         private async void Compare_Click(object sender, RoutedEventArgs e)
