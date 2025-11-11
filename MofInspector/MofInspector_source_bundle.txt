@@ -1,5 +1,5 @@
 ﻿# ========= MofInspector source bundle =========
-# Generated: 2025-11-11 11:35:42 -05:00
+# Generated: 2025-11-11 11:06:04 -05:00
 # Root: C:\VS2022\MofInspector\MofInspector
 # Files: 23
 # Includes: *.cs, *.xaml
@@ -1218,7 +1218,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MofInspector")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5b4d2a3a6ad52bf64b84fb30dbe3d21420532804")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7a8ca66bc4d10a7d40ac4263861aba9b4eef2c20")]
 [assembly: System.Reflection.AssemblyProductAttribute("MofInspector")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MofInspector")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
