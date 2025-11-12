@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,8 +24,10 @@ namespace MofInspector
             var lines = File.ReadAllLines(filePath);
             MofInstance currentInstance = null;
 
-            foreach (var line in lines)
+            // Use for-loop to allow multi-line array parsing
+            for (int i = 0; i < lines.Length; i++)
             {
+                var line = lines[i];
                 var trimmed = line.Trim();
 
                 // Detect start of instance
@@ -57,7 +58,71 @@ namespace MofInspector
                     if (parts.Length == 2)
                     {
                         var key = parts[0].Trim();
-                        var value = parts[1].Trim().TrimEnd(';').Trim().Trim('"');
+                        var value = parts[1].Trim().TrimEnd(';').Trim();
+
+                        // Handle multi-line array values
+                        if (value.StartsWith("{"))
+                        {
+                            var arrayItems = new List<string>();
+
+                            // If the array ends on the same line
+                            if (value.EndsWith("}"))
+                            {
+                                var arrayContent = value.Substring(1, value.Length - 2).Trim();
+                                arrayItems.AddRange(arrayContent
+                                    .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(s => s.Trim().Trim('"'))
+                                    .Where(s => !string.IsNullOrWhiteSpace(s)));
+                            }
+                            else
+                            {
+                                // Start collecting lines until we find the closing '}'
+                                // Remove opening brace if present
+                                if (value == "{")
+                                {
+                                    value = "";
+                                }
+                                else
+                                {
+                                    value = value.Substring(1).Trim();
+                                    if (!string.IsNullOrEmpty(value))
+                                    {
+                                        arrayItems.AddRange(value
+                                            .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                            .Select(s => s.Trim().Trim('"'))
+                                            .Where(s => !string.IsNullOrWhiteSpace(s)));
+                                    }
+                                }
+
+                                // Read subsequent lines for array items
+                                while (++i < lines.Length)
+                                {
+                                    var arrayLine = lines[i].Trim().TrimEnd(';').Trim();
+                                    if (arrayLine.EndsWith("}"))
+                                    {
+                                        arrayLine = arrayLine.Substring(0, arrayLine.Length - 1).Trim();
+                                        if (!string.IsNullOrEmpty(arrayLine))
+                                        {
+                                            arrayItems.AddRange(arrayLine
+                                                .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(s => s.Trim().Trim('"'))
+                                                .Where(s => !string.IsNullOrWhiteSpace(s)));
+                                        }
+                                        break;
+                                    }
+                                    else if (!string.IsNullOrEmpty(arrayLine) && arrayLine != "{")
+                                    {
+                                        arrayItems.Add(arrayLine.Trim().Trim('"', ','));
+                                    }
+                                }
+                            }
+                            value = string.Join(", ", arrayItems);
+                        }
+                        else
+                        {
+                            value = value.Trim('"');
+                        }
+
                         currentInstance.Properties[key] = value;
                     }
                 }
@@ -65,7 +130,6 @@ namespace MofInspector
 
             BuildRulesFromInstances();
         }
-
 
         private void BuildRulesFromInstances()
         {

@@ -125,5 +125,9 @@ namespace MofInspector
                 // Do not add instance properties, since they are the same
             }
         }
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
     }
 }

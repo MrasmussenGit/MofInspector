@@ -10,26 +10,17 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Status -->
-            <RowDefinition Height="Auto"/>
             <!-- File selectors -->
             <RowDefinition Height="Auto"/>
             <!-- Filters -->
             <RowDefinition Height="*"/>
             <!-- ListView -->
+            <RowDefinition Height="Auto"/>
+            <!-- Status + Close Button -->
         </Grid.RowDefinitions>
 
-        <!-- Status Text -->
-        <TextBlock Name="StatusText"
-                   Text=""
-                   FontWeight="Bold"
-                   Foreground="DarkBlue"
-                   Margin="0,0,0,10"
-                   Grid.Row="0"
-                   HorizontalAlignment="Left"/>
-
         <!-- File selectors -->
-        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0">
             <!-- File 1 -->
             <StackPanel Orientation="Vertical" Margin="0,0,10,0">
                 <TextBlock Text="File1" Margin="0,0,0,5"/>
@@ -63,7 +54,7 @@
         </StackPanel>
 
         <!-- Filter checkboxes -->
-        <UniformGrid Rows="1" Columns="5" Margin="0,0,0,10" Grid.Row="2">
+        <UniformGrid Rows="1" Columns="5" Margin="0,0,0,10" Grid.Row="1">
             <CheckBox Name="ShowDifferencesCheckBox" Content="Show Differences" Checked="FilterResults" Unchecked="FilterResults"/>
             <CheckBox Name="ShowMissingCheckBox" Content="Show Missing" Checked="FilterResults" Unchecked="FilterResults"/>
             <CheckBox Name="ShowMatchesCheckBox" Content="Show Matches" Checked="FilterResults" Unchecked="FilterResults"/>
@@ -72,7 +63,7 @@
         </UniformGrid>
 
         <!-- Differences List -->
-        <ListView Grid.Row="3"
+        <ListView Grid.Row="2"
           Name="DifferencesList"
           SelectionMode="Single"
           VerticalAlignment="Stretch"
@@ -127,6 +118,24 @@
                 </GridView>
             </ListView.View>
         </ListView>
-    </Grid>
 
+        <!-- Status and Close Button at the bottom -->
+        <DockPanel Grid.Row="3" LastChildFill="False" Margin="0,10,0,0">
+            <TextBlock Name="StatusText"
+                       Text=""
+                       FontWeight="Bold"
+                       Foreground="DarkBlue"
+                       Margin="0,0,0,0"
+                       VerticalAlignment="Center"
+                       DockPanel.Dock="Left"/>
+            <Button Content="Close"
+                    Width="100"
+                    Height="30"
+                    Margin="0,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Right"
+                    Click="Close_Click"/>
+        </DockPanel>
+    </Grid>
 </Window>
