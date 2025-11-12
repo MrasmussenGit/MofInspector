@@ -267,5 +267,10 @@ namespace MofInspector
             ShowMatchesCheckBox.IsChecked = false;
             ApplyFilters();
         }
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
     }
 }
