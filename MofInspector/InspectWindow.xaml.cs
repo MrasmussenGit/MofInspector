@@ -1,9 +1,9 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MofInspector
@@ -13,8 +13,9 @@ namespace MofInspector
         private Mof mof;
 
         public InspectWindow()
-        {
+        {   
             InitializeComponent();
+            DetailsList.KeyDown += DetailsList_KeyDown;
         }
 
         private void Browse_Click(object sender, RoutedEventArgs e)
@@ -101,7 +102,15 @@ namespace MofInspector
 
             RuleTree.Items.Add(rulesRoot);
         }
-
+        private void DetailsList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                var selectedItems = DetailsList.SelectedItems.Cast<KeyValuePair<string, string>>();
+                var text = string.Join(Environment.NewLine, selectedItems.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+                Clipboard.SetText(text);
+            }
+        }
 
         private void RuleTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
@@ -109,26 +118,11 @@ namespace MofInspector
 
             if (e.NewValue is TreeViewItem selectedNode && selectedNode.Tag is MofRule selectedRule)
             {
-                // Show rule details first
                 foreach (var detail in selectedRule.Details)
                 {
                     DetailsList.Items.Add(new KeyValuePair<string, string>(detail.Key, detail.Value));
                 }
-
-                // Show related instances
-                var relatedInstances = mof.Instances
-                    .Where(inst => inst.Properties.TryGetValue("ResourceID", out var rid) &&
-                                   mof.ExtractRuleIds(rid).Contains(selectedRule.RuleId))
-                    .ToList();
-
-                foreach (var inst in relatedInstances)
-                {
-                    DetailsList.Items.Add(new KeyValuePair<string, string>("Instance", inst.ClassName));
-                    foreach (var prop in inst.Properties)
-                    {
-                        DetailsList.Items.Add(new KeyValuePair<string, string>(prop.Key, prop.Value));
-                    }
-                }
+                // Do not add instance properties, since they are the same
             }
         }
     }

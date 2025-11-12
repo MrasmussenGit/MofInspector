@@ -50,7 +50,7 @@
             <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="10,0,0,0">
                 <StackPanel>
                     <TextBlock Text="Details" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
-                    <ListView Name="DetailsList">
+                    <ListView Name="DetailsList" SelectionMode="Extended">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Header="Property" Width="200" DisplayMemberBinding="{Binding Key}"/>
