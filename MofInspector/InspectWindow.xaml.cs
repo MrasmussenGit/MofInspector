@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -14,21 +13,9 @@ namespace MofInspector
         private Mof mof;
 
         public InspectWindow()
-        {
+        {   
             InitializeComponent();
             DetailsList.KeyDown += DetailsList_KeyDown;
-        }
-        private void DetailsList_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-            {
-                var selectedItems = DetailsList.SelectedItems.Cast<KeyValuePair<string, string>>();
-                if (selectedItems.Any())
-                {
-                    var text = string.Join(Environment.NewLine, selectedItems.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
-                    Clipboard.SetText(text);
-                }
-            }
         }
 
         private void Browse_Click(object sender, RoutedEventArgs e)
@@ -115,7 +102,15 @@ namespace MofInspector
 
             RuleTree.Items.Add(rulesRoot);
         }
-
+        private void DetailsList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                var selectedItems = DetailsList.SelectedItems.Cast<KeyValuePair<string, string>>();
+                var text = string.Join(Environment.NewLine, selectedItems.Select(kvp => $"{kvp.Key}: {kvp.Value}"));
+                Clipboard.SetText(text);
+            }
+        }
 
         private void RuleTree_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
