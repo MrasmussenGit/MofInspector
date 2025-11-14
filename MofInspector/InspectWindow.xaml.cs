@@ -13,7 +13,7 @@ namespace MofInspector
         private Mof mof;
 
         public InspectWindow()
-        {   
+        {
             InitializeComponent();
             DetailsList.KeyDown += DetailsList_KeyDown;
         }
@@ -54,21 +54,8 @@ namespace MofInspector
 
                 RuleCountLabel.Content = $"Total Rules: {mof.Rules.Count}";
 
-                var rulesRoot = new TreeViewItem { Header = $"Rules ({mof.Rules.Count})" };
-
-                foreach (var rule in mof.Rules.OrderBy(r => r.RuleId))
-                {
-                    var ruleNode = new TreeViewItem
-                    {
-                        Header = rule.RuleId,
-                        Foreground = rule.IsSkipped ? Brushes.Red : Brushes.Green,
-                        Tag = rule // store rule object for selection
-                    };
-
-                    rulesRoot.Items.Add(ruleNode);
-                }
-
-                RuleTree.Items.Add(rulesRoot);
+                PopulateRulesGroupedByClass(onlySkipped: false);
+                ApplyExpandState();
             }
             catch (Exception ex)
             {
@@ -76,32 +63,89 @@ namespace MofInspector
             }
         }
 
+        /// <summary>
+        /// Group rules by instance type (ClassName). Each top-level node is a ClassName,
+        /// expanded it shows distinct rules from all instances of that type.
+        /// </summary>
+        private void PopulateRulesGroupedByClass(bool onlySkipped)
+        {
+            RuleTree.Items.Clear();
+            if (mof == null) return;
+
+            var ruleProducingInstances = mof.Instances
+                .Where(i => i.Properties.ContainsKey("ResourceID"))
+                .ToList();
+
+            var groups = ruleProducingInstances
+                .GroupBy(i => i.ClassName)
+                .OrderBy(g => g.Key);
+
+            foreach (var classGroup in groups)
+            {
+                var distinctRuleIds = classGroup
+                    .SelectMany(inst =>
+                    {
+                        var resourceId = inst.Properties["ResourceID"];
+                        return mof.ExtractRuleIds(resourceId);
+                    })
+                    .Distinct()
+                    .Select(id => mof.Rules.FirstOrDefault(r => r.RuleId == id))
+                    .Where(r => r != null);
+
+                if (onlySkipped)
+                    distinctRuleIds = distinctRuleIds.Where(r => r.IsSkipped);
+
+                var ruleList = distinctRuleIds
+                    .OrderBy(r => r.RuleId)
+                    .ToList();
+
+                if (ruleList.Count == 0)
+                    continue;
+
+                var classNode = new TreeViewItem
+                {
+                    Header = $"{classGroup.Key} (rules: {ruleList.Count})",
+                    FontWeight = FontWeights.Bold
+                };
+
+                foreach (var rule in ruleList)
+                {
+                    var ruleNode = new TreeViewItem
+                    {
+                        Header = rule.RuleId,
+                        Foreground = rule.IsSkipped ? Brushes.Red : Brushes.Green,
+                        Tag = rule
+                    };
+                    classNode.Items.Add(ruleNode);
+                }
+
+                RuleTree.Items.Add(classNode);
+            }
+        }
+
         private void FilterRules(object sender, RoutedEventArgs e)
         {
             if (mof == null) return;
-
-            RuleTree.Items.Clear();
-
-            var filteredRules = ShowSkippedCheckBox.IsChecked == true
-                ? mof.Rules.Where(r => r.IsSkipped).OrderBy(r => r.RuleId)
-                : mof.Rules.OrderBy(r => r.RuleId);
-
-            var rulesRoot = new TreeViewItem { Header = $"Rules ({filteredRules.Count()})" };
-
-            foreach (var rule in filteredRules)
-            {
-                var ruleNode = new TreeViewItem
-                {
-                    Header = rule.RuleId,
-                    Foreground = rule.IsSkipped ? Brushes.Red : Brushes.Black,
-                    Tag = rule
-                };
-
-                rulesRoot.Items.Add(ruleNode);
-            }
-
-            RuleTree.Items.Add(rulesRoot);
+            bool onlySkipped = ShowSkippedCheckBox.IsChecked == true;
+            PopulateRulesGroupedByClass(onlySkipped);
+            ApplyExpandState();
         }
+
+        private void ExpandAllCheckBox_Changed(object sender, RoutedEventArgs e)
+        {
+            ApplyExpandState();
+        }
+
+        private void ApplyExpandState()
+        {
+            bool expand = ExpandAllCheckBox.IsChecked == true;
+            foreach (var item in RuleTree.Items)
+            {
+                if (item is TreeViewItem tvi)
+                    tvi.IsExpanded = expand;
+            }
+        }
+
         private void DetailsList_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
@@ -122,12 +166,12 @@ namespace MofInspector
                 {
                     DetailsList.Items.Add(new KeyValuePair<string, string>(detail.Key, detail.Value));
                 }
-                // Do not add instance properties, since they are the same
             }
         }
+
         private void Close_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
     }
 }
