@@ -10,7 +10,7 @@
             <RowDefinition Height="Auto"/>
             <!-- Top controls -->
             <RowDefinition Height="Auto"/>
-            <!-- Filter checkbox -->
+            <!-- Filter + expand/collapse -->
             <RowDefinition Height="*"/>
             <!-- Main content -->
             <RowDefinition Height="Auto"/>
@@ -25,13 +25,19 @@
             <Label Name="RuleCountLabel" FontWeight="Bold" Margin="20,0,0,0"/>
         </StackPanel>
 
-        <!-- Filter checkbox -->
-        <CheckBox Name="ShowSkippedCheckBox"
-              Grid.Row="1"
-              Content="Show only skipped rules"
-              Margin="0,0,0,10"
-              Checked="FilterRules"
-              Unchecked="FilterRules"/>
+        <!-- Filters -->
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1">
+            <CheckBox Name="ShowSkippedCheckBox"
+                      Content="Show only skipped rules"
+                      Margin="0,0,20,0"
+                      Checked="FilterRules"
+                      Unchecked="FilterRules"/>
+            <CheckBox Name="ExpandAllCheckBox"
+                      Content="Expand all"
+                      Margin="0,0,0,0"
+                      Checked="ExpandAllCheckBox_Changed"
+                      Unchecked="ExpandAllCheckBox_Changed"/>
+        </StackPanel>
 
         <!-- Main content: TreeView + Details -->
         <Grid Grid.Row="2">
@@ -42,9 +48,9 @@
 
             <!-- TreeView -->
             <TreeView Name="RuleTree"
-                  Grid.Column="0"
-                  SelectedItemChanged="RuleTree_SelectedItemChanged"
-                  Background="LightBlue"/>
+                      Grid.Column="0"
+                      SelectedItemChanged="RuleTree_SelectedItemChanged"
+                      Background="LightBlue"/>
 
             <!-- Details panel -->
             <Border Grid.Column="1" BorderBrush="Gray" BorderThickness="1" Padding="10" Margin="10,0,0,0">
@@ -67,7 +73,6 @@
             <Button Content="Close"
                     Width="100"
                     Height="30"
-                    Margin="0,0,0,0"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     DockPanel.Dock="Right"
