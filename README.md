@@ -10,5 +10,5 @@ CLI-based for easy integration into automation workflows
 
 
 Getting Started
-Clone the repository and compile the C# solution:
+Download the exe located under releases.  The compiled exe is for an x64 windows machine.  If you need a different binary, you will have to clone the solution and build it.
 
