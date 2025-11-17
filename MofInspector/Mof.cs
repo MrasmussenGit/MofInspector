@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace MofInspector
 {
-    public class Mof
+    public partial class Mof
     {
         public List<MofInstance> Instances { get; private set; } = new List<MofInstance>();
         public List<MofRule> Rules { get; private set; } = new List<MofRule>();

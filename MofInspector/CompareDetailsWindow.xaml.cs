@@ -1,102 +1,368 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.ComponentModel;
 
 namespace MofInspector
 {
     public partial class CompareDetailWindow : Window
     {
-        private readonly string ruleId;
-        private readonly MofRule rule1;
-        private readonly MofRule rule2;
-        private readonly List<MofInstance> instances1;
-        private readonly List<MofInstance> instances2;
+        private readonly string _ruleId;
+        private readonly MofRule? _rule1;
+        private readonly MofRule? _rule2;
+        private readonly List<MofInstance> _instances1;
+        private readonly List<MofInstance> _instances2;
+        private GridViewColumnHeader? _lastHeaderClicked;
+        private System.ComponentModel.ListSortDirection _lastHeaderDirection = System.ComponentModel.ListSortDirection.Ascending;
 
-        public CompareDetailWindow(
-            string ruleId,
-            MofRule rule1,
-            MofRule rule2,
-            List<MofInstance> instances1,
-            List<MofInstance> instances2)
+
+        // Extended patterns: optional leading 'v', any dot groups, optional trailing letter.
+        private static readonly Regex PowerStigPathSegment =
+            new(@"(?i)(PowerStig)[\\/](v?\d+(?:\.\d+)*(?:[a-z])?)(?=[\\/])", RegexOptions.Compiled);
+
+        private static readonly Regex PowerStigInline =
+            new(@"(?i)\bPowerStig[-_](v?\d+(?:\.\d+)*(?:[a-z])?)\b", RegexOptions.Compiled);
+
+        private static readonly Regex PowerStigGenericMixed =
+            new(@"(?i)\b(PowerStig)(?:[-_/\\])(v?\d+(?:\.\d+)*(?:[a-z])?)(?=[-_/\\]|$)", RegexOptions.Compiled);
+
+        // Collapse multiple whitespace
+        private static readonly Regex MultiWhitespace = new(@"\s+", RegexOptions.Compiled);
+
+        // Remove enclosing quotes
+        private static string StripOuterQuotes(string s) =>
+            (s.Length >= 2 && ((s[0] == '"' && s[^1] == '"') || (s[0] == '\'' && s[^1] == '\'')))
+            ? s.Substring(1, s.Length - 2)
+            : s;
+
+        public CompareDetailWindow(string ruleId,
+                                   MofRule? rule1,
+                                   MofRule? rule2,
+                                   List<MofInstance> instances1,
+                                   List<MofInstance> instances2)
         {
             InitializeComponent();
+            _ruleId = ruleId;
+            _rule1 = rule1;
+            _rule2 = rule2;
+            _instances1 = instances1;
+            _instances2 = instances2;
 
-            this.ruleId = ruleId;
-            this.rule1 = rule1;
-            this.rule2 = rule2;
+            RuleIdText.Text = ruleId;
+            BuildPropertyDiffs();
+            BuildRawDiffLines();
+            ShowRawDiffCheckBox.IsChecked = false;
+            SetOverallStatus();
+        }
+        private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource is not GridViewColumnHeader header || header.Column == null)
+                return;
 
-            // If you target .NET Framework or older C# language versions, avoid target-typed 'new()'
-            this.instances1 = instances1 ?? new List<MofInstance>();
-            this.instances2 = instances2 ?? new List<MofInstance>();
+            string headerText = header.Column.Header?.ToString() ?? "";
+            if (string.IsNullOrEmpty(headerText)) return;
 
-            RuleIdText.Text = ruleId ?? "—";
+            if (PropertyDiffList.ItemsSource is not IEnumerable<object> current) return;
+            var rows = current.OfType<DiffRow>().ToList();
+            if (rows.Count == 0) return;
 
-            // Populate rule properties (show "—" for empty)
-            RuleProps1.ItemsSource = ToKvp(rule1?.Details);
-            RuleProps2.ItemsSource = ToKvp(rule2?.Details);
+            var direction = System.ComponentModel.ListSortDirection.Ascending;
+            if (header == _lastHeaderClicked && _lastHeaderDirection == System.ComponentModel.ListSortDirection.Ascending)
+                direction = System.ComponentModel.ListSortDirection.Descending;
 
-            // Populate instance lists with a small preview
-            Instances1.ItemsSource = this.instances1
-                .Select(i => new
-                {
-                    i.ClassName,
-                    i.InstanceName,
-                    Preview = PreviewFromProps(i.Properties)
-                })
-                .ToList();
+            Func<DiffRow, object> selector = headerText switch
+            {
+                "Property" => r => r.Key,
+                "File 1 Value" => r => r.Value1,
+                "File 2 Value" => r => r.Value2,
+                "Status" => r => r.Status,
+                _ => r => r.Key
+            };
 
-            Instances2.ItemsSource = this.instances2
-                .Select(i => new
-                {
-                    i.ClassName,
-                    i.InstanceName,
-                    Preview = PreviewFromProps(i.Properties)
-                })
-                .ToList();
+            rows = direction == System.ComponentModel.ListSortDirection.Ascending
+                ? rows.OrderBy(selector).ToList()
+                : rows.OrderByDescending(selector).ToList();
+
+            PropertyDiffList.ItemsSource = rows;
+
+            _lastHeaderClicked = header;
+            _lastHeaderDirection = direction;
         }
 
-        private static IEnumerable<KeyValuePair<string, string>> ToKvp(Dictionary<string, string> dict)
+
+        private class DiffRow
         {
-            if (dict == null || dict.Count == 0)
-                return new[] { new KeyValuePair<string, string>("(no properties)", "—") };
-
-            // Move commonly-compared fields to the top (in the order listed), then alpha for the rest
-            var commonFirst = new[] { "ResourceID", "Key", "Value", "Ensure", "Type", "Path" };
-
-            var head = commonFirst
-                .Select(k => dict
-                    .FirstOrDefault(kv => string.Equals(kv.Key, k, StringComparison.OrdinalIgnoreCase)))
-                .Where(kv => !string.IsNullOrEmpty(kv.Key)); // keep only those that exist
-
-            var tail = dict
-                .Where(kv => !commonFirst.Contains(kv.Key, StringComparer.OrdinalIgnoreCase))
-                .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase);
-
-            return head.Concat(tail);
+            public string Key { get; set; } = "";
+            public string Value1 { get; set; } = "";
+            public string Value2 { get; set; } = "";
+            public string Status { get; set; } = "";
         }
 
-        private static string PreviewFromProps(Dictionary<string, string> props, int maxLen = 120)
+        private class RawLine
         {
-            if (props == null || props.Count == 0) return "—";
+            public string Text { get; set; } = "";
+            public bool IsChanged { get; set; }
+            public Brush Bg => IsChanged ? new SolidColorBrush(Color.FromArgb(60, 255, 0, 0)) : Brushes.Transparent;
+        }
 
-            var picks = new[] { "ResourceID", "Key", "Value", "Name", "Path" };
+        private void SetOverallStatus()
+        {
+            string status;
+            if (_rule1 == null) status = "Missing in File 1";
+            else if (_rule2 == null) status = "Missing in File 2";
+            else if (_rule1.Details == null || _rule2.Details == null)
+                status = "Parsing Error";
+            else if (_rule1.Details.Count == 0 || _rule2.Details.Count == 0)
+                status = "Parsing Error";
+            else
+            {
+                bool same = _rule1.Details.Count == _rule2.Details.Count &&
+                            _rule1.Details.All(kvp =>
+                                _rule2.Details.TryGetValue(kvp.Key, out var v2) &&
+                                EquivalentIgnoringPowerStigVersion(kvp.Value, v2));
+                status = same ? "Match" : "Different";
+            }
 
-            var picked = props
-                .Where(kv => picks.Contains(kv.Key, StringComparer.OrdinalIgnoreCase))
-                .Select(kv => $"{kv.Key}={kv.Value}");
+            OverallStatusText.Text = status;
+            OverallStatusText.Foreground = status switch
+            {
+                "Match" => Brushes.DarkGreen,
+                "Different" => Brushes.DarkRed,
+                "Missing in File 1" => Brushes.DarkOrange,
+                "Missing in File 2" => Brushes.DarkOrange,
+                "Parsing Error" => Brushes.Peru,
+                _ => Brushes.Black
+            };
+        }
 
-            // If none of the picks exist, fall back to the first few properties
-            var parts = picked.Any()
-                ? picked
-                : props.Take(3).Select(kv => $"{kv.Key}={kv.Value}");
+        private void BuildPropertyDiffs()
+        {
+            var rows = new List<DiffRow>();
 
-            var s = string.Join(" | ", parts);
-            return s.Length <= maxLen ? s : s.Substring(0, maxLen) + "...";
+            if (_rule1 == null && _rule2 == null)
+            {
+                PropertyDiffList.ItemsSource = rows;
+                return;
+            }
+
+            var dict1 = _rule1?.Details ?? new Dictionary<string, string>();
+            var dict2 = _rule2?.Details ?? new Dictionary<string, string>();
+
+            var allKeys = new HashSet<string>(dict1.Keys, StringComparer.OrdinalIgnoreCase);
+            allKeys.UnionWith(dict2.Keys);
+
+            foreach (var key in allKeys.OrderBy(k => k))
+            {
+                bool in1 = dict1.TryGetValue(key, out var v1);
+                bool in2 = dict2.TryGetValue(key, out var v2);
+
+                string status;
+                if (in1 && in2)
+                {
+                    status = EquivalentIgnoringPowerStigVersion(v1, v2) ? "Same" : "Different";
+                }
+                else if (in1 && !in2)
+                {
+                    status = "Missing in File 2";
+                }
+                else
+                {
+                    status = "Missing in File 1";
+                }
+
+                rows.Add(new DiffRow
+                {
+                    Key = key,
+                    Value1 = v1 ?? "",
+                    Value2 = v2 ?? "",
+                    Status = status
+                });
+            }
+
+            rows.Add(new DiffRow
+            {
+                Key = "(Instance Count File 1)",
+                Value1 = _instances1.Count.ToString(),
+                Value2 = "",
+                Status = "Info"
+            });
+            rows.Add(new DiffRow
+            {
+                Key = "(Instance Count File 2)",
+                Value1 = "",
+                Value2 = _instances2.Count.ToString(),
+                Status = "Info"
+            });
+
+            PropertyDiffList.ItemsSource = rows;
+        }
+
+        private bool EquivalentIgnoringPowerStigVersion(string? a, string? b)
+        {
+            if (a == null && b == null) return true;
+            if (a == null || b == null) return false;
+
+            var na = PreprocessAndNormalize(a);
+            var nb = PreprocessAndNormalize(b);
+
+            return string.Equals(na, nb, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Preprocess (trim, strip quotes/semicolon, collapse whitespace, normalize separators) then normalize PowerStig version.
+        private string PreprocessAndNormalize(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return "";
+            var trimmed = input.Trim();
+
+            // Remove trailing semicolon often present in MOF lines, e.g. Value = "x";
+            if (trimmed.EndsWith(";"))
+                trimmed = trimmed.Substring(0, trimmed.Length - 1).Trim();
+
+            trimmed = StripOuterQuotes(trimmed);
+
+            // Collapse multiple whitespace to single space (avoid diffs: tabs vs spaces)
+            trimmed = MultiWhitespace.Replace(trimmed, " ");
+
+            // Normalize escaping: some raw text may have double backslashes
+            // Replace double backslashes with single for comparison
+            trimmed = trimmed.Replace(@"\\", @"\");
+
+            return NormalizePowerStigVersion(trimmed);
+        }
+
+        // Normalize any PowerStig version variant (including trailing letter) to a token.
+        private string NormalizePowerStigVersion(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+
+            string norm = input.Replace('\\', '/');
+
+            norm = PowerStigPathSegment.Replace(norm, m => $"{m.Groups[1].Value}/__POWERSTIG_VERSION__");
+            norm = PowerStigInline.Replace(norm, "PowerStig__POWERSTIG_VERSION__");
+            norm = PowerStigGenericMixed.Replace(norm, m => $"{m.Groups[1].Value}__POWERSTIG_VERSION__");
+
+            norm = Regex.Replace(norm, @"(__POWERSTIG_VERSION__)+", "__POWERSTIG_VERSION__");
+
+            return norm;
+        }
+
+        private void BuildRawDiffLines()
+        {
+            RawLines1.ItemsSource = null;
+            RawLines2.ItemsSource = null;
+
+            if (_rule1?.RawText == null || _rule2?.RawText == null)
+                return;
+
+            var lines1 = SplitLinesLimited(_rule1.RawText);
+            var lines2 = SplitLinesLimited(_rule2.RawText);
+
+            int max = Math.Max(lines1.Count, lines2.Count);
+            var out1 = new List<RawLine>(max);
+            var out2 = new List<RawLine>(max);
+
+            for (int i = 0; i < max; i++)
+            {
+                string l1 = i < lines1.Count ? lines1[i] : "";
+                string l2 = i < lines2.Count ? lines2[i] : "";
+
+                bool changed = !EquivalentIgnoringPowerStigVersion(l1, l2);
+
+                out1.Add(new RawLine { Text = l1, IsChanged = changed });
+                out2.Add(new RawLine { Text = l2, IsChanged = changed });
+            }
+
+            RawLines1.ItemsSource = out1;
+            RawLines2.ItemsSource = out2;
+            ToggleRawDiffVisibility(false);
+            ApplyLineFilter();
+        }
+
+        private List<string> SplitLinesLimited(string text) =>
+            text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
+                .Select(l => l.Length <= 500 ? l : l.Substring(0, 500) + "...")
+                .ToList();
+
+        private void ShowRawDiffChanged(object sender, RoutedEventArgs e)
+        {
+            ToggleRawDiffVisibility(ShowRawDiffCheckBox.IsChecked == true);
+            if (ShowRawDiffCheckBox.IsChecked == true)
+                ApplyLineFilter();
+        }
+
+        private void RawLines_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && sender is ListBox lb)
+            {
+                var selected = lb.SelectedItems.Cast<RawLine>().Select(r => r.Text);
+                if (!selected.Any()) return;
+                Clipboard.SetText(string.Join(Environment.NewLine, selected));
+            }
+        }
+
+        private void CopyRawLines_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem mi &&
+                mi.Parent is ContextMenu cm &&
+                cm.PlacementTarget is ListBox lb &&
+                lb.ItemsSource is IEnumerable<RawLine> lines)
+            {
+                var selected = lb.SelectedItems.Cast<RawLine>().Select(r => r.Text);
+                if (!selected.Any())
+                    selected = lines.Select(r => r.Text);
+                Clipboard.SetText(string.Join(Environment.NewLine, selected));
+            }
+        }
+
+        private void CopyAllRawLines_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem mi &&
+                mi.Parent is ContextMenu cm &&
+                cm.PlacementTarget is ListBox lb &&
+                lb.ItemsSource is IEnumerable<RawLine> lines)
+            {
+                Clipboard.SetText(string.Join(Environment.NewLine, lines.Select(r => r.Text)));
+            }
+        }
+
+        private void ApplyLineFilter()
+        {
+            if (RawLines1 == null || RawLines2 == null) return;
+
+            if (RawLines1.ItemsSource is not IEnumerable<RawLine> lines1 ||
+                RawLines2.ItemsSource is not IEnumerable<RawLine> lines2)
+                return;
+
+            bool onlyChanged = ShowOnlyChangedLinesCheckBox.IsChecked == true;
+            if (!onlyChanged) return;
+
+            RawLines1.ItemsSource = lines1.Where(l => l.IsChanged).ToList();
+            RawLines2.ItemsSource = lines2.Where(l => l.IsChanged).ToList();
+        }
+
+        private void ToggleRawDiffVisibility(bool visible)
+        {
+            if (RawLines1 == null || RawLines2 == null) return;
+            RawLines1.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+            RawLines2.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void PropertyDiffList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                var selected = PropertyDiffList.SelectedItems.Cast<DiffRow>();
+                var text = string.Join(Environment.NewLine,
+                    selected.Select(r => $"{r.Key}: [{r.Value1}] vs [{r.Value2}] ({r.Status})"));
+                Clipboard.SetText(text);
+            }
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
     }
-
 }

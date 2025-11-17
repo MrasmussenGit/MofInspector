@@ -7,15 +7,19 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>256.ico</ApplicationIcon>
-    <Version>1.0.0.3</Version>
-    <FileVersion>1.0.0.3</FileVersion>
-    <AssemblyVersion>1.0.0.3</AssemblyVersion>
-    <InformationalVersion>1.0.0.3</InformationalVersion>
+    <Version>1.0.0.4</Version>
+    <FileVersion>1.0.0.4</FileVersion>
+    <AssemblyVersion>1.0.0.4</AssemblyVersion>
+    <InformationalVersion>1.0.0.4</InformationalVersion>
 	<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="256.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="MOF.Static.cs" />
   </ItemGroup>
 
 </Project>
