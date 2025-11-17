@@ -18,4 +18,8 @@
     <Content Include="256.ico" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="MOF.Static.cs" />
+  </ItemGroup>
+
 </Project>
