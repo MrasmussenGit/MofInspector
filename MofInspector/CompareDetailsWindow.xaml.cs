@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.ComponentModel;
 
 namespace MofInspector
 {
@@ -20,31 +19,21 @@ namespace MofInspector
         private GridViewColumnHeader? _lastHeaderClicked;
         private System.ComponentModel.ListSortDirection _lastHeaderDirection = System.ComponentModel.ListSortDirection.Ascending;
 
+        private List<DiffRow> _allPropertyDiffRows = new();
+        private List<RawLine> _rawLinesFull1 = new();
+        private List<RawLine> _rawLinesFull2 = new();
 
-        // Extended patterns: optional leading 'v', any dot groups, optional trailing letter.
-        private static readonly Regex PowerStigPathSegment =
-            new(@"(?i)(PowerStig)[\\/](v?\d+(?:\.\d+)*(?:[a-z])?)(?=[\\/])", RegexOptions.Compiled);
-
-        private static readonly Regex PowerStigInline =
-            new(@"(?i)\bPowerStig[-_](v?\d+(?:\.\d+)*(?:[a-z])?)\b", RegexOptions.Compiled);
-
-        private static readonly Regex PowerStigGenericMixed =
-            new(@"(?i)\b(PowerStig)(?:[-_/\\])(v?\d+(?:\.\d+)*(?:[a-z])?)(?=[-_/\\]|$)", RegexOptions.Compiled);
-
-        // Collapse multiple whitespace
+        private static readonly Regex PowerStigPathSegment = new(@"(?i)(PowerStig)[\\/](v?\d+(?:\.\d+)*(?:[a-z])?)(?=[\\/])", RegexOptions.Compiled);
+        private static readonly Regex PowerStigInline = new(@"(?i)\bPowerStig[-_](v?\d+(?:\.\d+)*(?:[a-z])?)\b", RegexOptions.Compiled);
+        private static readonly Regex PowerStigGenericMixed = new(@"(?i)\b(PowerStig)(?:[-_/\\])(v?\d+(?:\.\d+)*(?:[a-z])?)(?=[-_/\\]|$)", RegexOptions.Compiled);
         private static readonly Regex MultiWhitespace = new(@"\s+", RegexOptions.Compiled);
 
-        // Remove enclosing quotes
         private static string StripOuterQuotes(string s) =>
             (s.Length >= 2 && ((s[0] == '"' && s[^1] == '"') || (s[0] == '\'' && s[^1] == '\'')))
             ? s.Substring(1, s.Length - 2)
             : s;
 
-        public CompareDetailWindow(string ruleId,
-                                   MofRule? rule1,
-                                   MofRule? rule2,
-                                   List<MofInstance> instances1,
-                                   List<MofInstance> instances2)
+        public CompareDetailWindow(string ruleId, MofRule? rule1, MofRule? rule2, List<MofInstance> instances1, List<MofInstance> instances2)
         {
             InitializeComponent();
             _ruleId = ruleId;
@@ -59,18 +48,16 @@ namespace MofInspector
             ShowRawDiffCheckBox.IsChecked = false;
             SetOverallStatus();
         }
+
         private void GridViewColumnHeader_Click(object sender, RoutedEventArgs e)
         {
             if (e.OriginalSource is not GridViewColumnHeader header || header.Column == null)
                 return;
 
-            string headerText = header.Column.Header?.ToString() ?? "";
+            var headerText = header.Column.Header?.ToString() ?? "";
             if (string.IsNullOrEmpty(headerText)) return;
 
-            if (PropertyDiffList.ItemsSource is not IEnumerable<object> current) return;
-            var rows = current.OfType<DiffRow>().ToList();
-            if (rows.Count == 0) return;
-
+            var rows = _allPropertyDiffRows;
             var direction = System.ComponentModel.ListSortDirection.Ascending;
             if (header == _lastHeaderClicked && _lastHeaderDirection == System.ComponentModel.ListSortDirection.Ascending)
                 direction = System.ComponentModel.ListSortDirection.Descending;
@@ -94,7 +81,6 @@ namespace MofInspector
             _lastHeaderDirection = direction;
         }
 
-
         private class DiffRow
         {
             public string Key { get; set; } = "";
@@ -115,16 +101,13 @@ namespace MofInspector
             string status;
             if (_rule1 == null) status = "Missing in File 1";
             else if (_rule2 == null) status = "Missing in File 2";
-            else if (_rule1.Details == null || _rule2.Details == null)
-                status = "Parsing Error";
-            else if (_rule1.Details.Count == 0 || _rule2.Details.Count == 0)
+            else if (_rule1.Details == null || _rule2.Details == null || _rule1.Details.Count == 0 || _rule2.Details.Count == 0)
                 status = "Parsing Error";
             else
             {
                 bool same = _rule1.Details.Count == _rule2.Details.Count &&
-                            _rule1.Details.All(kvp =>
-                                _rule2.Details.TryGetValue(kvp.Key, out var v2) &&
-                                EquivalentIgnoringPowerStigVersion(kvp.Value, v2));
+                            _rule1.Details.All(kvp => _rule2.Details.TryGetValue(kvp.Key, out var v2) &&
+                                                      EquivalentIgnoringPowerStigVersion(kvp.Value, v2));
                 status = same ? "Match" : "Different";
             }
 
@@ -143,13 +126,6 @@ namespace MofInspector
         private void BuildPropertyDiffs()
         {
             var rows = new List<DiffRow>();
-
-            if (_rule1 == null && _rule2 == null)
-            {
-                PropertyDiffList.ItemsSource = rows;
-                return;
-            }
-
             var dict1 = _rule1?.Details ?? new Dictionary<string, string>();
             var dict2 = _rule2?.Details ?? new Dictionary<string, string>();
 
@@ -161,19 +137,13 @@ namespace MofInspector
                 bool in1 = dict1.TryGetValue(key, out var v1);
                 bool in2 = dict2.TryGetValue(key, out var v2);
 
-                string status;
-                if (in1 && in2)
+                string status = (in1, in2) switch
                 {
-                    status = EquivalentIgnoringPowerStigVersion(v1, v2) ? "Same" : "Different";
-                }
-                else if (in1 && !in2)
-                {
-                    status = "Missing in File 2";
-                }
-                else
-                {
-                    status = "Missing in File 1";
-                }
+                    (true, true) => EquivalentIgnoringPowerStigVersion(v1, v2) ? "Same" : "Different",
+                    (true, false) => "Missing in File 2",
+                    (false, true) => "Missing in File 1",
+                    _ => "Missing"
+                };
 
                 rows.Add(new DiffRow
                 {
@@ -184,70 +154,40 @@ namespace MofInspector
                 });
             }
 
-            rows.Add(new DiffRow
-            {
-                Key = "(Instance Count File 1)",
-                Value1 = _instances1.Count.ToString(),
-                Value2 = "",
-                Status = "Info"
-            });
-            rows.Add(new DiffRow
-            {
-                Key = "(Instance Count File 2)",
-                Value1 = "",
-                Value2 = _instances2.Count.ToString(),
-                Status = "Info"
-            });
+            rows.Add(new DiffRow { Key = "(Instance Count File 1)", Value1 = _instances1.Count.ToString(), Value2 = "", Status = "Info" });
+            rows.Add(new DiffRow { Key = "(Instance Count File 2)", Value1 = "", Value2 = _instances2.Count.ToString(), Status = "Info" });
 
-            PropertyDiffList.ItemsSource = rows;
+            _allPropertyDiffRows = rows;
+            PropertyDiffList.ItemsSource = _allPropertyDiffRows;
         }
 
         private bool EquivalentIgnoringPowerStigVersion(string? a, string? b)
         {
             if (a == null && b == null) return true;
             if (a == null || b == null) return false;
-
-            var na = PreprocessAndNormalize(a);
-            var nb = PreprocessAndNormalize(b);
-
-            return string.Equals(na, nb, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(PreprocessAndNormalize(a), PreprocessAndNormalize(b), StringComparison.OrdinalIgnoreCase);
         }
 
-        // Preprocess (trim, strip quotes/semicolon, collapse whitespace, normalize separators) then normalize PowerStig version.
         private string PreprocessAndNormalize(string input)
         {
             if (string.IsNullOrWhiteSpace(input)) return "";
             var trimmed = input.Trim();
-
-            // Remove trailing semicolon often present in MOF lines, e.g. Value = "x";
             if (trimmed.EndsWith(";"))
                 trimmed = trimmed.Substring(0, trimmed.Length - 1).Trim();
-
             trimmed = StripOuterQuotes(trimmed);
-
-            // Collapse multiple whitespace to single space (avoid diffs: tabs vs spaces)
             trimmed = MultiWhitespace.Replace(trimmed, " ");
-
-            // Normalize escaping: some raw text may have double backslashes
-            // Replace double backslashes with single for comparison
             trimmed = trimmed.Replace(@"\\", @"\");
-
             return NormalizePowerStigVersion(trimmed);
         }
 
-        // Normalize any PowerStig version variant (including trailing letter) to a token.
         private string NormalizePowerStigVersion(string input)
         {
             if (string.IsNullOrEmpty(input)) return input;
-
             string norm = input.Replace('\\', '/');
-
             norm = PowerStigPathSegment.Replace(norm, m => $"{m.Groups[1].Value}/__POWERSTIG_VERSION__");
             norm = PowerStigInline.Replace(norm, "PowerStig__POWERSTIG_VERSION__");
             norm = PowerStigGenericMixed.Replace(norm, m => $"{m.Groups[1].Value}__POWERSTIG_VERSION__");
-
             norm = Regex.Replace(norm, @"(__POWERSTIG_VERSION__)+", "__POWERSTIG_VERSION__");
-
             return norm;
         }
 
@@ -270,17 +210,16 @@ namespace MofInspector
             {
                 string l1 = i < lines1.Count ? lines1[i] : "";
                 string l2 = i < lines2.Count ? lines2[i] : "";
-
                 bool changed = !EquivalentIgnoringPowerStigVersion(l1, l2);
-
                 out1.Add(new RawLine { Text = l1, IsChanged = changed });
                 out2.Add(new RawLine { Text = l2, IsChanged = changed });
             }
 
-            RawLines1.ItemsSource = out1;
-            RawLines2.ItemsSource = out2;
+            _rawLinesFull1 = out1;
+            _rawLinesFull2 = out2;
+
             ToggleRawDiffVisibility(false);
-            ApplyLineFilter();
+            RefreshRawLineView();
         }
 
         private List<string> SplitLinesLimited(string text) =>
@@ -292,7 +231,27 @@ namespace MofInspector
         {
             ToggleRawDiffVisibility(ShowRawDiffCheckBox.IsChecked == true);
             if (ShowRawDiffCheckBox.IsChecked == true)
-                ApplyLineFilter();
+                RefreshRawLineView();
+        }
+
+        private void ShowOnlyChangedLinesChanged(object sender, RoutedEventArgs e) => RefreshRawLineView();
+
+        private void RefreshRawLineView()
+        {
+            if (RawLines1 == null || RawLines2 == null) return;
+
+            bool onlyChanged = ShowOnlyChangedLinesCheckBox.IsChecked == true;
+            IEnumerable<RawLine> view1 = _rawLinesFull1;
+            IEnumerable<RawLine> view2 = _rawLinesFull2;
+
+            if (onlyChanged)
+            {
+                view1 = view1.Where(l => l.IsChanged);
+                view2 = view2.Where(l => l.IsChanged);
+            }
+
+            RawLines1.ItemsSource = view1.ToList();
+            RawLines2.ItemsSource = view2.ToList();
         }
 
         private void RawLines_KeyDown(object sender, KeyEventArgs e)
@@ -313,8 +272,7 @@ namespace MofInspector
                 lb.ItemsSource is IEnumerable<RawLine> lines)
             {
                 var selected = lb.SelectedItems.Cast<RawLine>().Select(r => r.Text);
-                if (!selected.Any())
-                    selected = lines.Select(r => r.Text);
+                if (!selected.Any()) selected = lines.Select(r => r.Text);
                 Clipboard.SetText(string.Join(Environment.NewLine, selected));
             }
         }
@@ -330,21 +288,6 @@ namespace MofInspector
             }
         }
 
-        private void ApplyLineFilter()
-        {
-            if (RawLines1 == null || RawLines2 == null) return;
-
-            if (RawLines1.ItemsSource is not IEnumerable<RawLine> lines1 ||
-                RawLines2.ItemsSource is not IEnumerable<RawLine> lines2)
-                return;
-
-            bool onlyChanged = ShowOnlyChangedLinesCheckBox.IsChecked == true;
-            if (!onlyChanged) return;
-
-            RawLines1.ItemsSource = lines1.Where(l => l.IsChanged).ToList();
-            RawLines2.ItemsSource = lines2.Where(l => l.IsChanged).ToList();
-        }
-
         private void ToggleRawDiffVisibility(bool visible)
         {
             if (RawLines1 == null || RawLines2 == null) return;
@@ -357,8 +300,7 @@ namespace MofInspector
             if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
             {
                 var selected = PropertyDiffList.SelectedItems.Cast<DiffRow>();
-                var text = string.Join(Environment.NewLine,
-                    selected.Select(r => $"{r.Key}: [{r.Value1}] vs [{r.Value2}] ({r.Status})"));
+                var text = string.Join(Environment.NewLine, selected.Select(r => $"{r.Key}: [{r.Value1}] vs [{r.Value2}] ({r.Status})"));
                 Clipboard.SetText(text);
             }
         }

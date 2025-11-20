@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace MofInspector
 {
@@ -12,251 +16,93 @@ namespace MofInspector
     {
         private Mof? mof1;
         private Mof? mof2;
-        private string? filePath1;
-        private string? filePath2;
-        private List<CompareRow> allRows = new();
+        private readonly List<dynamic> allResults = new();
 
-        private class CompareRow
-        {
-            public string RuleId { get; set; } = "";
-            public string Status { get; set; } = "";
-            public string Details { get; set; } = "";
-            public string Category { get; set; } = "";
-            public bool IsVersionOnlyDifference { get; set; }
-        }
+        // Regex patterns for PowerStig version normalization
+        private static readonly Regex PowerStigPathSegment = new(@"(?i)(PowerStig)[\\/](v?\d+(?:\.\d+)*(?:[a-z])?)(?=[\\/])", RegexOptions.Compiled);
+        private static readonly Regex PowerStigInline = new(@"(?i)\bPowerStig[-_](v?\d+(?:\.\d+)*(?:[a-z])?)\b", RegexOptions.Compiled);
+        private static readonly Regex PowerStigGenericMixed = new(@"(?i)\b(PowerStig)(?:[-_/\\])(v?\d+(?:\.\d+)*(?:[a-z])?)(?=[-_/\\]|$)", RegexOptions.Compiled);
+        private static readonly Regex MultiWhitespace = new(@"\s+", RegexOptions.Compiled);
 
         public CompareWindow()
         {
             InitializeComponent();
         }
 
-        // Regex patterns (same as detail window, extended)
-        private static readonly Regex PowerStigPathSegment = new(@"(?i)(PowerStig)[\\/](v?\d+(?:\.\d+)*(?:[a-z])?)(?=[\\/])", RegexOptions.Compiled);
-        private static readonly Regex PowerStigInline = new(@"(?i)\bPowerStig[-_](v?\d+(?:\.\d+)*(?:[a-z])?)\b", RegexOptions.Compiled);
-        private static readonly Regex PowerStigGenericMixed = new(@"(?i)\b(PowerStig)(?:[-_/\\])(v?\d+(?:\.\d+)*(?:[a-z])?)(?=[-_/\\]|$)", RegexOptions.Compiled);
-        private static readonly Regex MultiWhitespace = new(@"\s+", RegexOptions.Compiled);
-
-        private static string NormalizePowerStigVersion(string input)
-        {
-            if (string.IsNullOrEmpty(input)) return input;
-            string norm = input.Replace('\\', '/');
-            norm = PowerStigPathSegment.Replace(norm, m => $"{m.Groups[1].Value}/__POWERSTIG_VERSION__");
-            norm = PowerStigInline.Replace(norm, "PowerStig__POWERSTIG_VERSION__");
-            norm = PowerStigGenericMixed.Replace(norm, m => $"{m.Groups[1].Value}__POWERSTIG_VERSION__");
-            norm = Regex.Replace(norm, @"(__POWERSTIG_VERSION__)+", "__POWERSTIG_VERSION__");
-            return norm;
-        }
-
-        private static string Preprocess(string value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return "";
-            var s = value.Trim();
-
-            // Strip outer quotes
-            if (s.Length > 1 && ((s[0] == '"' && s[^1] == '"') || (s[0] == '\'' && s[^1] == '\'')))
-                s = s.Substring(1, s.Length - 2);
-
-            // Remove trailing semicolon if any
-            if (s.EndsWith(";"))
-                s = s.Substring(0, s.Length - 1).Trim();
-
-            // Collapse multiple whitespace
-            s = MultiWhitespace.Replace(s, " ");
-
-            // Unescape double backslashes
-            s = s.Replace(@"\\", @"\");
-
-            return NormalizePowerStigVersion(s);
-        }
-
-        private static bool EquivalentIgnoringPowerStigVersion(string? a, string? b)
-        {
-            if (a == null && b == null) return true;
-            if (a == null || b == null) return false;
-            var pa = Preprocess(a);
-            var pb = Preprocess(b);
-            return string.Equals(pa, pb, StringComparison.OrdinalIgnoreCase);
-        }
-
-        private void Browse1_Click(object sender, RoutedEventArgs e) => LoadFile1_Click(sender, e);
-        private void Browse2_Click(object sender, RoutedEventArgs e) => LoadFile2_Click(sender, e);
-
-        private void Compare_Click(object sender, RoutedEventArgs e)
-        {
-            if (mof1 == null || mof2 == null)
-            {
-                MessageBox.Show("Load both MOF files before comparing.", "Compare", MessageBoxButton.OK, MessageBoxImage.Information);
-                return;
-            }
-            BuildDiffs();
-        }
-
-        private void DifferencesList_KeyDown(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && DifferencesList.SelectedItems.Count > 0)
-            {
-                var rows = DifferencesList.SelectedItems.Cast<CompareRow>();
-                var text = string.Join(Environment.NewLine,
-                    rows.Select(r => $"{r.RuleId}\t{r.Status}\t{r.Details}"));
-                Clipboard.SetText(text);
-            }
-        }
-
         private void LoadFile1_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*" };
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*"
+            };
             if (dlg.ShowDialog() == true)
             {
-                filePath1 = dlg.FileName;
-                File1PathText.Text = System.IO.Path.GetFileName(filePath1);
-                mof1 = Mof.LoadFromFile(filePath1);
-                BuildDiffs();
+                File1PathText.Text = dlg.FileName;
+                TryRunComparison();
             }
         }
 
         private void LoadFile2_Click(object sender, RoutedEventArgs e)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*" };
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*"
+            };
             if (dlg.ShowDialog() == true)
             {
-                filePath2 = dlg.FileName;
-                File2PathText.Text = System.IO.Path.GetFileName(filePath2);
-                mof2 = Mof.LoadFromFile(filePath2);
-                BuildDiffs();
+                File2PathText.Text = dlg.FileName;
+                TryRunComparison();
             }
         }
 
-        private void BuildDiffs()
+        private async void TryRunComparison()
         {
-            allRows.Clear();
+            var path1 = File1PathText.Text;
+            var path2 = File2PathText.Text;
+
+            if (string.IsNullOrWhiteSpace(path1) || string.IsNullOrWhiteSpace(path2))
+                return;
+            if (!File.Exists(path1) || !File.Exists(path2))
+                return;
+
             DifferencesList.ItemsSource = null;
-            if (mof1 == null && mof2 == null) return;
 
-            var rules1 = mof1?.Rules ?? new List<MofRule>();
-            var rules2 = mof2?.Rules ?? new List<MofRule>();
-            var allRuleIds = new HashSet<string>(rules1.Select(r => r.RuleId), StringComparer.OrdinalIgnoreCase);
-            allRuleIds.UnionWith(rules2.Select(r => r.RuleId));
-
-            foreach (var ruleId in allRuleIds.OrderBy(r => r))
+            await Task.Run(() =>
             {
-                var r1 = rules1.FirstOrDefault(r => string.Equals(r.RuleId, ruleId, StringComparison.OrdinalIgnoreCase));
-                var r2 = rules2.FirstOrDefault(r => string.Equals(r.RuleId, ruleId, StringComparison.OrdinalIgnoreCase));
+                mof1 = new Mof(path1);
+                mof2 = new Mof(path2);
+            });
 
-                string status;
-                bool versionOnly = false;
-                string category = r1?.Category ?? r2?.Category ?? "";
-
-                if (r1 == null) status = "Missing in File 1";
-                else if (r2 == null) status = "Missing in File 2";
-                else if (r1.Details == null || r2.Details == null) status = "Parsing Error";
-                else
-                {
-                    bool sameFully =
-                        DictionariesFullyEqual(r1.Details, r2.Details) &&
-                        string.Equals(r1.RawText, r2.RawText, StringComparison.Ordinal);
-
-                    if (sameFully)
-                    {
-                        status = "Match";
-                    }
-                    else
-                    {
-                        bool sameIgnoringVersionDetails = RuleDetailsEquivalentIgnoringVersion(r1.Details, r2.Details);
-                        bool rawVersionOnly = RawTextDiffIsVersionOnly(r1.RawText, r2.RawText);
-
-                        if (sameIgnoringVersionDetails && rawVersionOnly)
-                        {
-                            status = "VersionOnly";
-                            versionOnly = true;
-                        }
-                        else
-                        {
-                            status = "Different";
-                        }
-                    }
-                }
-
-                allRows.Add(new CompareRow
-                {
-                    RuleId = ruleId,
-                    Status = status,
-                    Category = category,
-                    Details = status == "VersionOnly" ? "(Only PowerSTIG version differs)" : "",
-                    IsVersionOnlyDifference = versionOnly
-                });
-            }
-
-            ApplyRowFilter();
+            BuildComparisonResults();
+            ApplyFilters();
         }
 
-        private static bool DictionariesFullyEqual(Dictionary<string, string> d1, Dictionary<string, string> d2)
-        {
-            if (d1.Count != d2.Count) return false;
-            foreach (var kvp in d1)
-            {
-                if (!d2.TryGetValue(kvp.Key, out var v2)) return false;
-                if (!string.Equals(kvp.Value?.Trim(), v2?.Trim(), StringComparison.Ordinal))
-                    return false;
-            }
-            return true;
-        }
-
-        private void ApplyRowFilter()
-        {
-            bool includeVersionOnly = IncludeVersionOnlyDiffsCheckBox.IsChecked == true;
-
-            var view = allRows.Where(r =>
-                r.Status != "Match" &&                   // hide pure matches
-                (r.Status != "VersionOnly" || includeVersionOnly) // hide version-only unless toggled
-            ).ToList();
-
-            DifferencesList.ItemsSource = view;
-        }
-
-        private static bool RuleDetailsEquivalentIgnoringVersion(Dictionary<string, string> d1, Dictionary<string, string> d2)
-        {
-            if (d1.Count != d2.Count) return false;
-            foreach (var kvp in d1)
-            {
-                if (!d2.TryGetValue(kvp.Key, out var v2)) return false;
-                if (!EquivalentIgnoringPowerStigVersion(kvp.Value, v2)) return false;
-            }
-            return true;
-        }
-
-        private static bool RuleDetailsDifferenceIsOnlyVersion(Dictionary<string, string> d1, Dictionary<string, string> d2)
-        {
-            var keys = new HashSet<string>(d1.Keys, StringComparer.OrdinalIgnoreCase);
-            keys.UnionWith(d2.Keys);
-            foreach (var k in keys)
-            {
-                var v1 = d1.TryGetValue(k, out var tv1) ? tv1 : null;
-                var v2 = d2.TryGetValue(k, out var tv2) ? tv2 : null;
-                if (v1 == null || v2 == null) return false; // missing property is real difference
-                if (!EquivalentIgnoringPowerStigVersion(v1, v2)) return false;
-            }
-            return true;
-        }
-
-        private static bool RawTextDiffIsVersionOnly(string? raw1, string? raw2)
-        {
-            if (raw1 == null || raw2 == null) return false;
-            var lines1 = raw1.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-            var lines2 = raw2.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
-            if (lines1.Length != lines2.Length) return false;
-            for (int i = 0; i < lines1.Length; i++)
-            {
-                if (!EquivalentIgnoringPowerStigVersion(lines1[i], lines2[i])) return false;
-            }
-            return true;
-        }
-
-        private void FilterDiffsChanged(object sender, RoutedEventArgs e) => ApplyRowFilter();
         private void DifferencesList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => OpenSelectedRuleDetail();
+
+        private void DifferencesList_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                OpenSelectedRuleDetail();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.C && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && DifferencesList.SelectedItems.Count > 0)
+            {
+                var rows = DifferencesList.SelectedItems.Cast<object>();
+                var text = string.Join(Environment.NewLine,
+                    rows.Select(r =>
+                    {
+                        var t = r.GetType();
+                        return $"{t.GetProperty("RuleId")?.GetValue(r)}\t{t.GetProperty("Status")?.GetValue(r)}\t{t.GetProperty("Details")?.GetValue(r)}";
+                    }));
+                Clipboard.SetText(text);
+            }
+        }
 
         private void OpenSelectedRuleDetail()
         {
             if (DifferencesList.SelectedItem == null) return;
+
             var selected = DifferencesList.SelectedItem;
             var ruleIdProp = selected.GetType().GetProperty("RuleId");
             var ruleId = ruleIdProp?.GetValue(selected) as string;
@@ -280,6 +126,180 @@ namespace MofInspector
                 Owner = this
             };
             details.ShowDialog();
+        }
+
+        private void BuildComparisonResults()
+        {
+            if (mof1 == null || mof2 == null) return;
+
+            allResults.Clear();
+
+            var allRuleIds = mof1.Rules.Select(r => r.RuleId)
+                .Union(mof2.Rules.Select(r => r.RuleId))
+                .Distinct()
+                .OrderBy(r => r);
+
+            foreach (var ruleId in allRuleIds)
+            {
+                var rule1 = mof1.Rules.FirstOrDefault(r => r.RuleId == ruleId);
+                var rule2 = mof2.Rules.FirstOrDefault(r => r.RuleId == ruleId);
+                string category = rule1?.Category ?? rule2?.Category ?? "Unknown";
+
+                if (rule1 == null)
+                {
+                    allResults.Add(new { RuleId = ruleId, Status = "Missing in File 1", Details = "", Category = category });
+                    continue;
+                }
+                if (rule2 == null)
+                {
+                    allResults.Add(new { RuleId = ruleId, Status = "Missing in File 2", Details = "", Category = category });
+                    continue;
+                }
+
+                if (rule1.Details == null || rule2.Details == null || rule1.Details.Count == 0 || rule2.Details.Count == 0)
+                {
+                    allResults.Add(new
+                    {
+                        RuleId = ruleId,
+                        Status = "Parsing Error",
+                        Details = "One or both rules have no parsed details.",
+                        Category = category
+                    });
+                    continue;
+                }
+
+                bool exactEqual = DictionariesExact(rule1.Details, rule2.Details);
+                if (exactEqual)
+                {
+                    allResults.Add(new { RuleId = ruleId, Status = "Match", Details = "All properties identical", Category = category });
+                    continue;
+                }
+
+                bool detailsIgnoringVersion = DictionariesIgnoringVersion(rule1.Details, rule2.Details);
+                bool rawVersionOnly = RawTextDiffIsVersionOnly(rule1.RawText, rule2.RawText);
+
+                if (detailsIgnoringVersion && rawVersionOnly)
+                {
+                    allResults.Add(new
+                    {
+                        RuleId = ruleId,
+                        Status = "VersionOnly",
+                        Details = "Only PowerStig version differs",
+                        Category = category
+                    });
+                    continue;
+                }
+
+                var diffs = new List<string>();
+
+                foreach (var kvp in rule1.Details)
+                {
+                    if (!rule2.Details.TryGetValue(kvp.Key, out var v2))
+                    {
+                        diffs.Add($"{kvp.Key}: {kvp.Value} vs (missing)");
+                    }
+                    else if (!string.Equals(kvp.Value?.Trim(), v2?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        diffs.Add($"{kvp.Key}: {kvp.Value} vs {v2}");
+                    }
+                }
+                foreach (var kvp in rule2.Details)
+                {
+                    if (!rule1.Details.ContainsKey(kvp.Key))
+                        diffs.Add($"{kvp.Key}: (missing) vs {kvp.Value}");
+                }
+
+                allResults.Add(new
+                {
+                    RuleId = ruleId,
+                    Status = "Different",
+                    Details = string.Join("; ", diffs),
+                    Category = category
+                });
+            }
+        }
+
+        private static bool DictionariesExact(Dictionary<string, string> a, Dictionary<string, string> b)
+        {
+            if (a.Count != b.Count) return false;
+            foreach (var kvp in a)
+            {
+                if (!b.TryGetValue(kvp.Key, out var v2)) return false;
+                if (!string.Equals(kvp.Value?.Trim(), v2?.Trim(), StringComparison.Ordinal))
+                    return false;
+            }
+            return true;
+        }
+
+        private static bool DictionariesIgnoringVersion(Dictionary<string, string> a, Dictionary<string, string> b)
+        {
+            if (a.Count != b.Count) return false;
+            foreach (var kvp in a)
+            {
+                if (!b.TryGetValue(kvp.Key, out var v2)) return false;
+                if (!EquivalentIgnoringPowerStigVersion(kvp.Value, v2)) return false;
+            }
+            return true;
+        }
+
+        private static bool RawTextDiffIsVersionOnly(string raw1, string raw2)
+        {
+            if (raw1 == null || raw2 == null) return false;
+            var lines1 = raw1.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            var lines2 = raw2.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            if (lines1.Length != lines2.Length) return false;
+            for (int i = 0; i < lines1.Length; i++)
+            {
+                if (!EquivalentIgnoringPowerStigVersion(lines1[i], lines2[i])) return false;
+            }
+            return true;
+        }
+
+        private static string Preprocess(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return "";
+            var s = value.Trim();
+
+            if (s.Length > 1 && ((s[0] == '"' && s[^1] == '"') || (s[0] == '\'' && s[^1] == '\'')))
+                s = s.Substring(1, s.Length - 2);
+
+            if (s.EndsWith(";"))
+                s = s.Substring(0, s.Length - 1).Trim();
+
+            s = MultiWhitespace.Replace(s, " ");
+            s = s.Replace(@"\\", @"\");
+            return NormalizePowerStigVersion(s);
+        }
+
+        private static bool EquivalentIgnoringPowerStigVersion(string a, string b)
+        {
+            var pa = Preprocess(a);
+            var pb = Preprocess(b);
+            return string.Equals(pa, pb, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizePowerStigVersion(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return input;
+            string norm = input.Replace('\\', '/');
+            norm = PowerStigPathSegment.Replace(norm, m => $"{m.Groups[1].Value}/__POWERSTIG_VERSION__");
+            norm = PowerStigInline.Replace(norm, "PowerStig__POWERSTIG_VERSION__");
+            norm = PowerStigGenericMixed.Replace(norm, m => $"{m.Groups[1].Value}__POWERSTIG_VERSION__");
+            norm = Regex.Replace(norm, @"(__POWERSTIG_VERSION__)+", "__POWERSTIG_VERSION__");
+            return norm;
+        }
+
+        private void FilterDiffsChanged(object sender, RoutedEventArgs e) => ApplyFilters();
+
+        private void ApplyFilters()
+        {
+            // Checked now hides VersionOnly; unchecked shows everything (default).
+            bool hideVersionOnly = IncludeVersionOnlyDiffsCheckBox.IsChecked == true;
+            var filtered = allResults.Where(x => !hideVersionOnly || x.Status != "VersionOnly").ToList();
+
+            var view = new ListCollectionView(filtered);
+            view.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
+            DifferencesList.ItemsSource = view;
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
