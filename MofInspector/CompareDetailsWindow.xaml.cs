@@ -196,20 +196,29 @@ namespace MofInspector
             RawLines1.ItemsSource = null;
             RawLines2.ItemsSource = null;
 
-            if (_rule1?.RawText == null || _rule2?.RawText == null)
-                return;
+            var lines1 = _rule1?.RawText != null ? SplitLinesLimited(_rule1.RawText) : new List<string>();
+            var lines2 = _rule2?.RawText != null ? SplitLinesLimited(_rule2.RawText) : new List<string>();
 
-            var lines1 = SplitLinesLimited(_rule1.RawText);
-            var lines2 = SplitLinesLimited(_rule2.RawText);
+            if (lines1.Count == 0 && _rule1 == null)
+                lines1.Add("[No raw text: rule missing in File 1]");
+            else if (lines1.Count == 0 && _rule1?.RawText == null)
+                lines1.Add("[No raw text available for File 1]");
 
-            int max = Math.Max(lines1.Count, lines2.Count);
-            var out1 = new List<RawLine>(max);
-            var out2 = new List<RawLine>(max);
+            if (lines2.Count == 0 && _rule2 == null)
+                lines2.Add("[No raw text: rule missing in File 2]");
+            else if (lines2.Count == 0 && _rule2?.RawText == null)
+                lines2.Add("[No raw text available for File 2]");
 
-            for (int i = 0; i < max; i++)
+            // Align lines using LCS to avoid marking all as changed when one insertion/deletion shifts indexes.
+            var aligned = AlignLines(lines1, lines2);
+
+            var out1 = new List<RawLine>(aligned.Count);
+            var out2 = new List<RawLine>(aligned.Count);
+
+            foreach (var (i1, i2) in aligned)
             {
-                string l1 = i < lines1.Count ? lines1[i] : "";
-                string l2 = i < lines2.Count ? lines2[i] : "";
+                string l1 = i1.HasValue ? lines1[i1.Value] : "";
+                string l2 = i2.HasValue ? lines2[i2.Value] : "";
                 bool changed = !EquivalentIgnoringPowerStigVersion(l1, l2);
                 out1.Add(new RawLine { Text = l1, IsChanged = changed });
                 out2.Add(new RawLine { Text = l2, IsChanged = changed });
@@ -226,6 +235,41 @@ namespace MofInspector
             text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None)
                 .Select(l => l.Length <= 500 ? l : l.Substring(0, 500) + "...")
                 .ToList();
+
+        // Longest Common Subsequence alignment of raw lines (exact string match).
+        private List<(int? i1, int? i2)> AlignLines(IList<string> a, IList<string> b)
+        {
+            int n = a.Count, m = b.Count;
+            var dp = new int[n + 1, m + 1];
+            for (int i = n - 1; i >= 0; i--)
+                for (int j = m - 1; j >= 0; j--)
+                    dp[i, j] = a[i] == b[j] ? 1 + dp[i + 1, j + 1] : Math.Max(dp[i + 1, j], dp[i, j + 1]);
+
+            var result = new List<(int? i1, int? i2)>();
+            int x = 0, y = 0;
+            while (x < n && y < m)
+            {
+                if (a[x] == b[y])
+                {
+                    result.Add((x, y));
+                    x++; y++;
+                }
+                else if (dp[x + 1, y] >= dp[x, y + 1])
+                {
+                    result.Add((x, null));
+                    x++;
+                }
+                else
+                {
+                    result.Add((null, y));
+                    y++;
+                }
+            }
+            while (x < n) { result.Add((x, null)); x++; }
+            while (y < m) { result.Add((null, y)); y++; }
+
+            return result;
+        }
 
         private void ShowRawDiffChanged(object sender, RoutedEventArgs e)
         {

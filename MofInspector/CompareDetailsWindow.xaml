@@ -9,24 +9,51 @@
         <DataTemplate x:Key="RawLineTemplate">
             <TextBlock Text="{Binding Text}" TextWrapping="NoWrap"/>
         </DataTemplate>
+
+        <!-- Style WITHOUT custom ControlTemplate so GridView can render columns -->
+        <Style x:Key="PropertyDiffItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="ToolTip" Value="{Binding Status}"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#FFCCE5FF"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding Status}" Value="Same">
+                    <Setter Property="Background" Value="#DFF5D8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Match">
+                    <Setter Property="Background" Value="#DFF5D8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Different">
+                    <Setter Property="Background" Value="#FFE5E5"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
+                    <Setter Property="Background" Value="#FFF5D9"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
+                    <Setter Property="Background" Value="#FFF5D9"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
+                    <Setter Property="Background" Value="#FFF2C2"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Info">
+                    <Setter Property="Background" Value="#F0F2F5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
+
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Header -->
             <RowDefinition Height="*"/>
-            <!-- Property Differences -->
             <RowDefinition Height="Auto"/>
-            <!-- Middle (Raw diff toggles) -->
             <RowDefinition Height="Auto"/>
-            <!-- Splitter -->
             <RowDefinition Height="*"/>
-            <!-- Raw Text Diff -->
             <RowDefinition Height="Auto"/>
-            <!-- Footer -->
         </Grid.RowDefinitions>
 
-        <!-- Header -->
         <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
             <TextBlock Text="Rule ID:" FontWeight="Bold" VerticalAlignment="Center"/>
             <TextBlock x:Name="RuleIdText" Margin="6,0,20,0" FontFamily="Consolas" VerticalAlignment="Center"/>
@@ -35,9 +62,9 @@
             <Button Content="Close" Margin="20,0,0,0" Padding="12,4" Click="Close_Click"/>
         </StackPanel>
 
-        <!-- Property Differences -->
         <GroupBox Header="Property Differences" Grid.Row="1" Margin="0,0,0,8">
             <ListView x:Name="PropertyDiffList"
+                      ItemContainerStyle="{StaticResource PropertyDiffItemStyle}"
                       SelectionMode="Extended"
                       KeyDown="PropertyDiffList_KeyDown"
                       GridViewColumnHeader.Click="GridViewColumnHeader_Click">
@@ -52,7 +79,6 @@
             </ListView>
         </GroupBox>
 
-        <!-- Middle: Raw diff controls -->
         <Border Grid.Row="2" Padding="6" Background="#E9EEF5" CornerRadius="4" Margin="0,0,0,8">
             <StackPanel Orientation="Horizontal">
                 <CheckBox x:Name="ShowRawDiffCheckBox"
@@ -67,13 +93,11 @@
             </StackPanel>
         </Border>
 
-        <!-- Splitter -->
         <GridSplitter Grid.Row="3"
                       Height="6"
                       HorizontalAlignment="Stretch"
                       Background="#D0D7E2"/>
 
-        <!-- Raw Text Diff -->
         <GroupBox Header="Raw Text Diff" Grid.Row="4">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -114,7 +138,6 @@
             </Grid>
         </GroupBox>
 
-        <!-- Footer -->
         <DockPanel Grid.Row="5" Margin="0,10,0,0">
             <TextBlock Text="Right-click raw lists for copy options. Ctrl+C copies selected lines." Foreground="#555"/>
         </DockPanel>
