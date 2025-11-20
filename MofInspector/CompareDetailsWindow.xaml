@@ -3,14 +3,12 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Rule Details"
         Height="650" Width="1100"
-        Background="#F5F7FA"
+        Background="LightBlue"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <DataTemplate x:Key="RawLineTemplate">
             <TextBlock Text="{Binding Text}" TextWrapping="NoWrap"/>
         </DataTemplate>
-
-        <!-- Style WITHOUT custom ControlTemplate so GridView can render columns -->
         <Style x:Key="PropertyDiffItemStyle" TargetType="ListViewItem">
             <Setter Property="Padding" Value="2"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -24,6 +22,9 @@
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Match">
                     <Setter Property="Background" Value="#DFF5D8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="VersionOnly">
+                    <Setter Property="Background" Value="#FFF7E6"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Different">
                     <Setter Property="Background" Value="#FFE5E5"/>
@@ -43,7 +44,6 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>

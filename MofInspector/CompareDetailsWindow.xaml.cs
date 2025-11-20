@@ -105,22 +105,46 @@ namespace MofInspector
                 status = "Parsing Error";
             else
             {
-                bool same = _rule1.Details.Count == _rule2.Details.Count &&
-                            _rule1.Details.All(kvp => _rule2.Details.TryGetValue(kvp.Key, out var v2) &&
-                                                      EquivalentIgnoringPowerStigVersion(kvp.Value, v2));
-                status = same ? "Match" : "Different";
+                bool exactSame = _rule1.Details.Count == _rule2.Details.Count &&
+                                 _rule1.Details.All(kvp => _rule2.Details.TryGetValue(kvp.Key, out var v2) &&
+                                                           string.Equals(kvp.Value?.Trim(), v2?.Trim(), StringComparison.Ordinal));
+
+                if (exactSame)
+                    status = "Match";
+                else
+                {
+                    bool ignoringVersionSame = _rule1.Details.Count == _rule2.Details.Count &&
+                                               _rule1.Details.All(kvp => _rule2.Details.TryGetValue(kvp.Key, out var v2) &&
+                                                                         EquivalentIgnoringPowerStigVersion(kvp.Value, v2));
+
+                    bool rawVersionOnly = RawTextDiffIsVersionOnly(_rule1.RawText, _rule2.RawText);
+
+                    status = (ignoringVersionSame && rawVersionOnly) ? "VersionOnly" : "Different";
+                }
             }
 
             OverallStatusText.Text = status;
             OverallStatusText.Foreground = status switch
             {
                 "Match" => Brushes.DarkGreen,
+                "VersionOnly" => Brushes.DarkGoldenrod,
                 "Different" => Brushes.DarkRed,
                 "Missing in File 1" => Brushes.DarkOrange,
                 "Missing in File 2" => Brushes.DarkOrange,
                 "Parsing Error" => Brushes.Peru,
                 _ => Brushes.Black
             };
+        }
+
+        private bool RawTextDiffIsVersionOnly(string? raw1, string? raw2)
+        {
+            if (raw1 == null || raw2 == null) return false;
+            var lines1 = raw1.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            var lines2 = raw2.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+            if (lines1.Length != lines2.Length) return false;
+            for (int i = 0; i < lines1.Length; i++)
+                if (!EquivalentIgnoringPowerStigVersion(lines1[i], lines2[i])) return false;
+            return true;
         }
 
         private void BuildPropertyDiffs()
@@ -136,10 +160,11 @@ namespace MofInspector
             {
                 bool in1 = dict1.TryGetValue(key, out var v1);
                 bool in2 = dict2.TryGetValue(key, out var v2);
-
                 string status = (in1, in2) switch
                 {
-                    (true, true) => EquivalentIgnoringPowerStigVersion(v1, v2) ? "Same" : "Different",
+                    (true, true) => string.Equals(v1?.Trim(), v2?.Trim(), StringComparison.Ordinal)
+                        ? "Same"
+                        : (EquivalentIgnoringPowerStigVersion(v1, v2) ? "VersionOnly" : "Different"),
                     (true, false) => "Missing in File 2",
                     (false, true) => "Missing in File 1",
                     _ => "Missing"

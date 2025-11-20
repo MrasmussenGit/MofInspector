@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace MofInspector
 {
@@ -18,11 +20,15 @@ namespace MofInspector
         private Mof? mof2;
         private readonly List<dynamic> allResults = new();
 
-        // Regex patterns for PowerStig version normalization
+        // Fix regex patterns: remove extra escaping so version segments like 4.26.0 match and normalize
         private static readonly Regex PowerStigPathSegment = new(@"(?i)(PowerStig)[\\/](v?\d+(?:\.\d+)*(?:[a-z])?)(?=[\\/])", RegexOptions.Compiled);
         private static readonly Regex PowerStigInline = new(@"(?i)\bPowerStig[-_](v?\d+(?:\.\d+)*(?:[a-z])?)\b", RegexOptions.Compiled);
         private static readonly Regex PowerStigGenericMixed = new(@"(?i)\b(PowerStig)(?:[-_/\\])(v?\d+(?:\.\d+)*(?:[a-z])?)(?=[-_/\\]|$)", RegexOptions.Compiled);
         private static readonly Regex MultiWhitespace = new(@"\s+", RegexOptions.Compiled);
+
+
+
+        private bool _updatingFilterStates; // prevents recursive updates
 
         public CompareWindow()
         {
@@ -147,12 +153,24 @@ namespace MofInspector
 
                 if (rule1 == null)
                 {
-                    allResults.Add(new { RuleId = ruleId, Status = "Missing in File 1", Details = "", Category = category });
+                    allResults.Add(new
+                    {
+                        RuleId = ruleId,
+                        Status = "Missing in File 1",
+                        Details = "",
+                        Category = category
+                    });
                     continue;
                 }
                 if (rule2 == null)
                 {
-                    allResults.Add(new { RuleId = ruleId, Status = "Missing in File 2", Details = "", Category = category });
+                    allResults.Add(new
+                    {
+                        RuleId = ruleId,
+                        Status = "Missing in File 2",
+                        Details = "",
+                        Category = category
+                    });
                     continue;
                 }
 
@@ -171,7 +189,13 @@ namespace MofInspector
                 bool exactEqual = DictionariesExact(rule1.Details, rule2.Details);
                 if (exactEqual)
                 {
-                    allResults.Add(new { RuleId = ruleId, Status = "Match", Details = "All properties identical", Category = category });
+                    allResults.Add(new
+                    {
+                        RuleId = ruleId,
+                        Status = "Match",
+                        Details = "All properties identical",
+                        Category = category
+                    });
                     continue;
                 }
 
@@ -289,17 +313,77 @@ namespace MofInspector
             return norm;
         }
 
-        private void FilterDiffsChanged(object sender, RoutedEventArgs e) => ApplyFilters();
+        private void MasterFiltersChanged(object sender, RoutedEventArgs e)
+        {
+            if (_updatingFilterStates) return;
+            _updatingFilterStates = true;
+            bool target = ShowAllFiltersCheckBox.IsChecked == true;
+            ShowMatchCheckBox.IsChecked = target;
+            ShowDifferentCheckBox.IsChecked = target;
+            ShowVersionOnlyCheckBox.IsChecked = target;
+            ShowMissingFile1CheckBox.IsChecked = target;
+            ShowMissingFile2CheckBox.IsChecked = target;
+            ShowParsingErrorCheckBox.IsChecked = target;
+            _updatingFilterStates = false;
+            ApplyFilters();
+        }
+
+        private void FilterDiffsChanged(object sender, RoutedEventArgs e)
+        {
+            if (_updatingFilterStates) return;
+            _updatingFilterStates = true;
+            ShowAllFiltersCheckBox.IsChecked =
+                ShowMatchCheckBox.IsChecked == true &&
+                ShowDifferentCheckBox.IsChecked == true &&
+                ShowVersionOnlyCheckBox.IsChecked == true &&
+                ShowMissingFile1CheckBox.IsChecked == true &&
+                ShowMissingFile2CheckBox.IsChecked == true &&
+                ShowParsingErrorCheckBox.IsChecked == true;
+            _updatingFilterStates = false;
+            ApplyFilters();
+        }
 
         private void ApplyFilters()
         {
-            // Checked now hides VersionOnly; unchecked shows everything (default).
-            bool hideVersionOnly = IncludeVersionOnlyDiffsCheckBox.IsChecked == true;
-            var filtered = allResults.Where(x => !hideVersionOnly || x.Status != "VersionOnly").ToList();
+            if (DifferencesList == null ||
+                ShowMatchCheckBox == null ||
+                ShowDifferentCheckBox == null ||
+                ShowVersionOnlyCheckBox == null ||
+                ShowMissingFile1CheckBox == null ||
+                ShowMissingFile2CheckBox == null ||
+                ShowParsingErrorCheckBox == null)
+                return;
+
+            bool showMatch = ShowMatchCheckBox.IsChecked == true;
+            bool showDifferent = ShowDifferentCheckBox.IsChecked == true;
+            bool showVersionOnly = ShowVersionOnlyCheckBox.IsChecked == true;
+            bool showMissing1 = ShowMissingFile1CheckBox.IsChecked == true;
+            bool showMissing2 = ShowMissingFile2CheckBox.IsChecked == true;
+            bool showParsingError = ShowParsingErrorCheckBox.IsChecked == true;
+
+            bool anySelected = showMatch || showDifferent || showVersionOnly || showMissing1 || showMissing2 || showParsingError;
+
+            int total = allResults.Count;
+
+            var filtered = allResults.Where(x =>
+                (x.Status == "Match" && showMatch) ||
+                (x.Status == "Different" && showDifferent) ||
+                (x.Status == "VersionOnly" && showVersionOnly) ||
+                (x.Status == "Missing in File 1" && showMissing1) ||
+                (x.Status == "Missing in File 2" && showMissing2) ||
+                (x.Status == "Parsing Error" && showParsingError)
+            ).ToList();
+
+            if (!anySelected)
+                filtered.Clear();
 
             var view = new ListCollectionView(filtered);
             view.GroupDescriptions.Add(new PropertyGroupDescription("Category"));
             DifferencesList.ItemsSource = view;
+
+            // update counts
+            if (TotalCountText != null) TotalCountText.Text = total.ToString();
+            if (DisplayedCountText != null) DisplayedCountText.Text = filtered.Count.ToString();
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
