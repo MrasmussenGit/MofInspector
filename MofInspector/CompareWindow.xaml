@@ -11,71 +11,22 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Top section: file load + paths (row 0) -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,8" Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <Button Content="Load File 1" Width="120" Margin="0,0,8,0" Click="LoadFile1_Click"/>
-                <Button Content="Load File 2" Width="120" Margin="0,0,16,0" Click="LoadFile2_Click"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
+            <Button Content="Load File 1" Width="120" Margin="0,0,8,0" Click="LoadFile1_Click"/>
+            <Button Content="Load File 2" Width="120" Margin="0,0,16,0" Click="LoadFile2_Click"/>
 
-                <TextBlock Text="File1:" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Center"/>
-                <TextBlock x:Name="File1PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+            <TextBlock Text="File1:" FontWeight="Bold" Margin="0,0,5,0"/>
+            <TextBlock x:Name="File1PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
 
-                <TextBlock Text="File2:" FontWeight="Bold" Margin="15,0,5,0" VerticalAlignment="Center"/>
-                <TextBlock x:Name="File2PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
-            </StackPanel>
+            <TextBlock Text="File2:" FontWeight="Bold" Margin="15,0,5,0"/>
+            <TextBlock x:Name="File2PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
 
-            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <TextBlock Text="Show:" FontWeight="Bold" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                <CheckBox x:Name="ShowAllFiltersCheckBox"
-                          Content="All"
-                          ToolTip="Toggle every filter on or off."
-                          IsChecked="False"
-                          Margin="0,0,16,0"
-                          Checked="MasterFiltersChanged"
-                          Unchecked="MasterFiltersChanged"/>
-                <CheckBox x:Name="ShowMatchCheckBox"
-                          Content="Match"
-                          ToolTip="Rules present in both files with all properties identical."
-                          IsChecked="False"
-                          Margin="0,0,8,0"
-                          Checked="FilterDiffsChanged"
-                          Unchecked="FilterDiffsChanged"/>
-                <CheckBox x:Name="ShowDifferentCheckBox"
-                          Content="Different"
-                          ToolTip="Rules in both files where at least one non-version property differs."
-                          IsChecked="True"
-                          Margin="0,0,8,0"
-                          Checked="FilterDiffsChanged"
-                          Unchecked="FilterDiffsChanged"/>
-                <CheckBox x:Name="ShowVersionOnlyCheckBox"
-                          Content="Version Only"
-                          ToolTip="Rules differing only by PowerSTIG version/path; all other properties match."
-                          IsChecked="False"
-                          Margin="0,0,8,0"
-                          Checked="FilterDiffsChanged"
-                          Unchecked="FilterDiffsChanged"/>
-                <CheckBox x:Name="ShowMissingFile1CheckBox"
-                          Content="Missing in File 1"
-                          ToolTip="Rule absent from File 1 but present in File 2."
-                          IsChecked="True"
-                          Margin="0,0,8,0"
-                          Checked="FilterDiffsChanged"
-                          Unchecked="FilterDiffsChanged"/>
-                <CheckBox x:Name="ShowMissingFile2CheckBox"
-                          Content="Missing in File 2"
-                          ToolTip="Rule absent from File 2 but present in File 1."
-                          IsChecked="True"
-                          Margin="0,0,8,0"
-                          Checked="FilterDiffsChanged"
-                          Unchecked="FilterDiffsChanged"/>
-                <CheckBox x:Name="ShowParsingErrorCheckBox"
-                          Content="Parsing Error"
-                          ToolTip="Rule found but its details could not be parsed in one or both files."
-                          IsChecked="False"
-                          Margin="0,0,8,0"
-                          Checked="FilterDiffsChanged"
-                          Unchecked="FilterDiffsChanged"/>
-            </StackPanel>
+            <CheckBox x:Name="IncludeVersionOnlyDiffsCheckBox"
+                      Content="Show version-only diffs"
+                      Margin="20,0,0,0"
+                      IsChecked="False"
+                      Checked="FilterDiffsChanged"
+                      Unchecked="FilterDiffsChanged"/>
         </StackPanel>
 
         <ListView x:Name="DifferencesList"
@@ -88,9 +39,6 @@
                     <Setter Property="Margin" Value="1"/>
                     <Setter Property="Padding" Value="2"/>
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding Status}" Value="Match">
-                            <Setter Property="Background" Value="#DFF5D8"/>
-                        </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="VersionOnly">
                             <Setter Property="Background" Value="#FFF7E6"/>
                         </DataTrigger>
@@ -119,18 +67,8 @@
             </ListView.View>
         </ListView>
 
-        <!-- Footer with right-aligned Close button -->
-        <Grid Grid.Row="2" Margin="0,8,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="1"
-                    Content="Close"
-                    Width="100"
-                    Height="30"
-                    HorizontalAlignment="Right"
-                    Click="Close_Click"/>
-        </Grid>
+        <DockPanel Grid.Row="2" Margin="0,8,0,0">
+            <Button Content="Close" Width="100" Height="30" DockPanel.Dock="Right" Click="Close_Click"/>
+        </DockPanel>
     </Grid>
 </Window>
