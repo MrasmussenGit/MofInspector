@@ -23,29 +23,33 @@
                 <DataTrigger Binding="{Binding Status}" Value="Match">
                     <Setter Property="Background" Value="#DFF5D8"/>
                 </DataTrigger>
+                <!-- VersionOnly changed to distinct pale yellow -->
                 <DataTrigger Binding="{Binding Status}" Value="VersionOnly">
-                    <Setter Property="Background" Value="#FFF7E6"/>
+                    <Setter Property="Background" Value="#FFF3B3"/>
                 </DataTrigger>
+                <!-- Different strengthened to clearer soft red -->
                 <DataTrigger Binding="{Binding Status}" Value="Different">
-                    <Setter Property="Background" Value="#FFE5E5"/>
+                    <Setter Property="Background" Value="#FFC8C8"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
-                    <Setter Property="Background" Value="#FFF5D9"/>
+                    <Setter Property="Background" Value="#E9D9FF"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
-                    <Setter Property="Background" Value="#FFF5D9"/>
+                    <Setter Property="Background" Value="#E9D9FF"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
-                    <Setter Property="Background" Value="#FFF2C2"/>
+                    <Setter Property="Background" Value="#FFD48A"/>
                 </DataTrigger>
+                <!-- Info changed to blue-gray to avoid similarity with VersionOnly -->
                 <DataTrigger Binding="{Binding Status}" Value="Info">
-                    <Setter Property="Background" Value="#F0F2F5"/>
+                    <Setter Property="Background" Value="#D9E8FF"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -59,10 +63,55 @@
             <TextBlock x:Name="RuleIdText" Margin="6,0,20,0" FontFamily="Consolas" VerticalAlignment="Center"/>
             <TextBlock Text="Overall Status:" FontWeight="Bold" VerticalAlignment="Center"/>
             <TextBlock x:Name="OverallStatusText" Margin="6,0,20,0" FontWeight="Bold" VerticalAlignment="Center"/>
-            <Button Content="Close" Margin="20,0,0,0" Padding="12,4" Click="Close_Click"/>
+            <Button Content="Close" Margin="20,0,0,0" Padding="12,4" Click="Close_Click" Visibility="Collapsed"/>
         </StackPanel>
 
-        <GroupBox Header="Property Differences" Grid.Row="1" Margin="0,0,0,8">
+        <WrapPanel Grid.Row="1" Margin="0,0,0,8">
+            <Label Margin="0,2,16,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#DFF5D8" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="Match / Same" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,16,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#FFF3B3" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="VersionOnly" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,16,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#FFC8C8" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="Different" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,16,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#E9D9FF" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="Missing (File 1 / File 2)" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,16,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#FFD48A" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="Version Only Diff" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,16,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#D9E8FF" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="Info" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,0,2">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="18" Height="18" Fill="#FFCCE5FF" Stroke="#888" StrokeThickness="0.5"/>
+                    <TextBlock Text="Selected" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+        </WrapPanel>
+
+        <GroupBox Header="Property Differences" Grid.Row="2" Margin="0,0,0,8">
             <ListView x:Name="PropertyDiffList"
                       ItemContainerStyle="{StaticResource PropertyDiffItemStyle}"
                       SelectionMode="Extended"
@@ -79,7 +128,7 @@
             </ListView>
         </GroupBox>
 
-        <Border Grid.Row="2" Padding="6" Background="#E9EEF5" CornerRadius="4" Margin="0,0,0,8">
+        <Border Grid.Row="3" Padding="6" Background="#E9EEF5" CornerRadius="4" Margin="0,0,0,8">
             <StackPanel Orientation="Horizontal">
                 <CheckBox x:Name="ShowRawDiffCheckBox"
                           Content="Show Raw Text Diff"
@@ -93,12 +142,12 @@
             </StackPanel>
         </Border>
 
-        <GridSplitter Grid.Row="3"
+        <GridSplitter Grid.Row="4"
                       Height="6"
                       HorizontalAlignment="Stretch"
                       Background="#D0D7E2"/>
 
-        <GroupBox Header="Raw Text Diff" Grid.Row="4">
+        <GroupBox Header="Raw Text Diff" Grid.Row="5">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -110,7 +159,6 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <!-- Added labels for File 1 / File 2 -->
                 <TextBlock x:Name="RawFile1Label"
                            Grid.Row="0" Grid.Column="0"
                            Text="File 1"
@@ -160,8 +208,21 @@
             </Grid>
         </GroupBox>
 
-        <DockPanel Grid.Row="5" Margin="0,10,0,0">
-            <TextBlock Text="Right-click raw lists for copy options. Ctrl+C copies selected lines." Foreground="#555"/>
-        </DockPanel>
+        <Grid Grid.Row="6" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <DockPanel Grid.Column="0">
+                <TextBlock Text="Right-click raw lists for copy options. Ctrl+C copies selected lines." Foreground="#555"/>
+            </DockPanel>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Padding="18,6"
+                    Margin="12,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="Close_Click"/>
+        </Grid>
     </Grid>
 </Window>
