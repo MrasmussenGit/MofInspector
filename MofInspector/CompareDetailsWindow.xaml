@@ -100,12 +100,32 @@
 
         <GroupBox Header="Raw Text Diff" Grid.Row="4">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="6"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
+
+                <!-- Added labels for File 1 / File 2 -->
+                <TextBlock x:Name="RawFile1Label"
+                           Grid.Row="0" Grid.Column="0"
+                           Text="File 1"
+                           FontWeight="Bold"
+                           Margin="4,0,0,4"
+                           HorizontalAlignment="Left"/>
+                <TextBlock x:Name="RawFile2Label"
+                           Grid.Row="0" Grid.Column="2"
+                           Text="File 2"
+                           FontWeight="Bold"
+                           Margin="4,0,0,4"
+                           HorizontalAlignment="Left"/>
+
                 <ListBox x:Name="RawLines1"
+                         Grid.Row="1"
                          Grid.Column="0"
                          FontFamily="Consolas"
                          SelectionMode="Extended"
@@ -118,11 +138,13 @@
                         </Style>
                     </ListBox.ItemContainerStyle>
                 </ListBox>
-                <GridSplitter Grid.Column="1"
+                <GridSplitter Grid.Row="1"
+                              Grid.Column="1"
                               Width="6"
                               HorizontalAlignment="Center"
                               Background="#D0D7E2"/>
                 <ListBox x:Name="RawLines2"
+                         Grid.Row="1"
                          Grid.Column="2"
                          FontFamily="Consolas"
                          SelectionMode="Extended"

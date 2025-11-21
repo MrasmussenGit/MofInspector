@@ -13,12 +13,13 @@
 
         <!-- Top section: file load + paths (row 0) -->
         <StackPanel Grid.Row="0" Margin="0,0,0,8" Orientation="Vertical">
-            <!-- (unchanged content omitted for brevity; keep existing buttons and filters) -->
             <StackPanel Orientation="Horizontal">
                 <Button Content="Load File 1" Width="120" Margin="0,0,8,0" Click="LoadFile1_Click"/>
                 <Button Content="Load File 2" Width="120" Margin="0,0,16,0" Click="LoadFile2_Click"/>
+
                 <TextBlock Text="File1:" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Center"/>
                 <TextBlock x:Name="File1PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+
                 <TextBlock Text="File2:" FontWeight="Bold" Margin="15,0,5,0" VerticalAlignment="Center"/>
                 <TextBlock x:Name="File2PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
             </StackPanel>
@@ -118,14 +119,18 @@
             </ListView.View>
         </ListView>
 
-        <DockPanel Grid.Row="2" Margin="0,8,0,0">
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <TextBlock Text="Total Rules:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock x:Name="TotalCountText" Margin="0,0,12,0"/>
-                <TextBlock Text="Displayed:" FontWeight="Bold" Margin="0,0,4,0"/>
-                <TextBlock x:Name="DisplayedCountText"/>
-            </StackPanel>
-            <Button Content="Close" Width="100" Height="30" DockPanel.Dock="Right" Click="Close_Click"/>
-        </DockPanel>
+        <!-- Footer with right-aligned Close button -->
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Width="100"
+                    Height="30"
+                    HorizontalAlignment="Right"
+                    Click="Close_Click"/>
+        </Grid>
     </Grid>
 </Window>

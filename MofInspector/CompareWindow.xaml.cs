@@ -16,6 +16,8 @@ namespace MofInspector
 {
     public partial class CompareWindow : Window
     {
+        private TextBlock? TotalCountText;
+        private TextBlock? DisplayedCountText;
         private Mof? mof1;
         private Mof? mof2;
         private readonly List<dynamic> allResults = new();
