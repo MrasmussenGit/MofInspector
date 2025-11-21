@@ -1,12 +1,49 @@
 ﻿<Window x:Class="MofInspector.CompareDetailWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Rule Detail Comparison"
-        Height="650"
-        Width="1000"
+        Title="Rule Details"
+        Height="650" Width="1100"
         Background="LightBlue"
         WindowStartupLocation="CenterOwner">
-
+    <Window.Resources>
+        <DataTemplate x:Key="RawLineTemplate">
+            <TextBlock Text="{Binding Text}" TextWrapping="NoWrap"/>
+        </DataTemplate>
+        <Style x:Key="PropertyDiffItemStyle" TargetType="ListViewItem">
+            <Setter Property="Padding" Value="2"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="ToolTip" Value="{Binding Status}"/>
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#FFCCE5FF"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding Status}" Value="Same">
+                    <Setter Property="Background" Value="#DFF5D8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Match">
+                    <Setter Property="Background" Value="#DFF5D8"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="VersionOnly">
+                    <Setter Property="Background" Value="#FFF7E6"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Different">
+                    <Setter Property="Background" Value="#FFE5E5"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
+                    <Setter Property="Background" Value="#FFF5D9"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
+                    <Setter Property="Background" Value="#FFF5D9"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
+                    <Setter Property="Background" Value="#FFF2C2"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Status}" Value="Info">
+                    <Setter Property="Background" Value="#F0F2F5"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -16,140 +53,97 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="Rule:" FontWeight="Bold" Margin="0,0,5,0"/>
-            <TextBlock Name="RuleIdText" FontWeight="Bold"/>
-            <TextBlock Text="  Status:" FontWeight="Bold" Margin="15,0,5,0"/>
-            <TextBlock Name="OverallStatusText" FontWeight="Bold"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock Text="Rule ID:" FontWeight="Bold" VerticalAlignment="Center"/>
+            <TextBlock x:Name="RuleIdText" Margin="6,0,20,0" FontFamily="Consolas" VerticalAlignment="Center"/>
+            <TextBlock Text="Overall Status:" FontWeight="Bold" VerticalAlignment="Center"/>
+            <TextBlock x:Name="OverallStatusText" Margin="6,0,20,0" FontWeight="Bold" VerticalAlignment="Center"/>
+            <Button Content="Close" Margin="20,0,0,0" Padding="12,4" Click="Close_Click"/>
         </StackPanel>
 
-        <ListView Name="PropertyDiffList"
-                  Grid.Row="1"
-                  SelectionMode="Extended"
-                  Background="White"
-                  KeyDown="PropertyDiffList_KeyDown">
-            <ListView.Resources>
-                <Style TargetType="GridViewColumnHeader">
-                    <EventSetter Event="Click" Handler="GridViewColumnHeader_Click"/>
-                </Style>
-            </ListView.Resources>
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding Status}" Value="Same">
-                            <Setter Property="Background" Value="LightGreen"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Status}" Value="Different">
-                            <Setter Property="Background" Value="LightCoral"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
-                            <Setter Property="Background" Value="LightSalmon"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
-                            <Setter Property="Background" Value="LightSalmon"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
-                            <Setter Property="Background" Value="#FFF6D5"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding Status}" Value="Info">
-                            <Setter Property="Background" Value="#FFEFD5"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.View>
-                <GridView>
-                    <!-- Removed Tag properties (GridViewColumn does not have Tag) -->
-                    <GridViewColumn Header="Property" Width="220" DisplayMemberBinding="{Binding Key}"/>
-                    <GridViewColumn Header="File 1 Value" Width="300" DisplayMemberBinding="{Binding Value1}"/>
-                    <GridViewColumn Header="File 2 Value" Width="300" DisplayMemberBinding="{Binding Value2}"/>
-                    <GridViewColumn Header="Status" Width="140" DisplayMemberBinding="{Binding Status}"/>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <GroupBox Header="Property Differences" Grid.Row="1" Margin="0,0,0,8">
+            <ListView x:Name="PropertyDiffList"
+                      ItemContainerStyle="{StaticResource PropertyDiffItemStyle}"
+                      SelectionMode="Extended"
+                      KeyDown="PropertyDiffList_KeyDown"
+                      GridViewColumnHeader.Click="GridViewColumnHeader_Click">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Property" Width="180" DisplayMemberBinding="{Binding Key}"/>
+                        <GridViewColumn Header="File 1 Value" Width="250" DisplayMemberBinding="{Binding Value1}"/>
+                        <GridViewColumn Header="File 2 Value" Width="250" DisplayMemberBinding="{Binding Value2}"/>
+                        <GridViewColumn Header="Status" Width="130" DisplayMemberBinding="{Binding Status}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </GroupBox>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="0,10,0,5">
-            <CheckBox Name="ShowRawDiffCheckBox"
-                      Content="Show Raw Text Diff"
-                      Checked="ShowRawDiffChanged"
-                      Unchecked="ShowRawDiffChanged"/>
-            <CheckBox Name="ShowOnlyChangedLinesCheckBox"
-                      Content="Only changed lines"
-                      Margin="15,0,0,0"
-                      Checked="ShowRawDiffChanged"
-                      Unchecked="ShowRawDiffChanged"/>
-            <TextBlock Text="(Scroll; changed lines highlighted; Ctrl+C copies selection)"
-                       Margin="10,0,0,0"
-                       Foreground="DimGray"
-                       FontSize="11"/>
-        </StackPanel>
+        <Border Grid.Row="2" Padding="6" Background="#E9EEF5" CornerRadius="4" Margin="0,0,0,8">
+            <StackPanel Orientation="Horizontal">
+                <CheckBox x:Name="ShowRawDiffCheckBox"
+                          Content="Show Raw Text Diff"
+                          Margin="0,0,12,0"
+                          Checked="ShowRawDiffChanged"
+                          Unchecked="ShowRawDiffChanged"/>
+                <CheckBox x:Name="ShowOnlyChangedLinesCheckBox"
+                          Content="Only Changed Lines"
+                          Checked="ShowOnlyChangedLinesChanged"
+                          Unchecked="ShowOnlyChangedLinesChanged"/>
+            </StackPanel>
+        </Border>
 
-        <Grid Grid.Row="3">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+        <GridSplitter Grid.Row="3"
+                      Height="6"
+                      HorizontalAlignment="Stretch"
+                      Background="#D0D7E2"/>
 
-            <GroupBox Header="File 1 Raw" Margin="0,0,5,0" FontWeight="Bold">
-                <ListBox Name="RawLines1"
+        <GroupBox Header="Raw Text Diff" Grid.Row="4">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="6"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <ListBox x:Name="RawLines1"
+                         Grid.Column="0"
+                         FontFamily="Consolas"
                          SelectionMode="Extended"
                          KeyDown="RawLines_KeyDown"
-                         VirtualizingStackPanel.IsVirtualizing="True"
-                         ScrollViewer.CanContentScroll="True">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Text}"
-                                       Background="{Binding Bg}"
-                                       FontFamily="Consolas"
-                                       FontSize="12"
-                                       TextWrapping="NoWrap"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                    <ListBox.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Copy Selected Lines" Click="CopyRawLines_Click"/>
-                            <MenuItem Header="Copy All Lines" Click="CopyAllRawLines_Click"/>
-                        </ContextMenu>
-                    </ListBox.ContextMenu>
+                         ItemTemplate="{StaticResource RawLineTemplate}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="{Binding Bg}"/>
+                            <Setter Property="ToolTip" Value="{Binding Text}"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                 </ListBox>
-            </GroupBox>
-
-            <GroupBox Header="File 2 Raw" Margin="5,0,0,0" FontWeight="Bold" Grid.Column="1">
-                <ListBox Name="RawLines2"
+                <GridSplitter Grid.Column="1"
+                              Width="6"
+                              HorizontalAlignment="Center"
+                              Background="#D0D7E2"/>
+                <ListBox x:Name="RawLines2"
+                         Grid.Column="2"
+                         FontFamily="Consolas"
                          SelectionMode="Extended"
                          KeyDown="RawLines_KeyDown"
-                         VirtualizingStackPanel.IsVirtualizing="True"
-                         ScrollViewer.CanContentScroll="True">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding Text}"
-                                       Background="{Binding Bg}"
-                                       FontFamily="Consolas"
-                                       FontSize="12"
-                                       TextWrapping="NoWrap"/>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                    <ListBox.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Copy Selected Lines" Click="CopyRawLines_Click"/>
-                            <MenuItem Header="Copy All Lines" Click="CopyAllRawLines_Click"/>
-                        </ContextMenu>
-                    </ListBox.ContextMenu>
+                         ItemTemplate="{StaticResource RawLineTemplate}">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Background" Value="{Binding Bg}"/>
+                            <Setter Property="ToolTip" Value="{Binding Text}"/>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
                 </ListBox>
-            </GroupBox>
-        </Grid>
+            </Grid>
+        </GroupBox>
 
-        <DockPanel Grid.Row="4" Margin="0,10,0,0">
-            <Button Content="Close"
-                    Width="100"
-                    Height="30"
-                    DockPanel.Dock="Right"
-                    HorizontalAlignment="Right"
-                    Click="Close_Click"/>
+        <DockPanel Grid.Row="5" Margin="0,10,0,0">
+            <TextBlock Text="Right-click raw lists for copy options. Ctrl+C copies selected lines." Foreground="#555"/>
         </DockPanel>
     </Grid>
 </Window>
