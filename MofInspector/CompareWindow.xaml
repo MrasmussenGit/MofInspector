@@ -7,8 +7,11 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Top (made smaller via tighter margins) -->
             <RowDefinition Height="*"/>
+            <!-- List -->
             <RowDefinition Height="Auto"/>
+            <!-- Bottom -->
         </Grid.RowDefinitions>
 
         <!-- Top section: file load + paths (row 0) -->
@@ -91,19 +94,19 @@
                             <Setter Property="Background" Value="#DFF5D8"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="VersionOnly">
-                            <Setter Property="Background" Value="#FFF7E6"/>
+                            <Setter Property="Background" Value="#FFF3B3"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Different">
-                            <Setter Property="Background" Value="#FFE4C4"/>
+                            <Setter Property="Background" Value="#FFC8C8"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
-                            <Setter Property="Background" Value="#FFFFD5"/>
+                            <Setter Property="Background" Value="#E9D9FF"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
-                            <Setter Property="Background" Value="#FFFFD5"/>
+                            <Setter Property="Background" Value="#E9D9FF"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
-                            <Setter Property="Background" Value="#FFF0B3"/>
+                            <Setter Property="Background" Value="#FFD48A"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
