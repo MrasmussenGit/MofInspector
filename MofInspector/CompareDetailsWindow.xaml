@@ -14,9 +14,6 @@
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="ToolTip" Value="{Binding Status}"/>
             <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#FFCCE5FF"/>
-                </Trigger>
                 <DataTrigger Binding="{Binding Status}" Value="Same">
                     <Setter Property="Background" Value="#DFF5D8"/>
                 </DataTrigger>
@@ -24,54 +21,100 @@
                     <Setter Property="Background" Value="#DFF5D8"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="VersionOnly">
-                    <Setter Property="Background" Value="#FFF7E6"/>
+                    <Setter Property="Background" Value="#FFF3B3"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Different">
-                    <Setter Property="Background" Value="#FFE5E5"/>
+                    <Setter Property="Background" Value="#FFC8C8"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Missing in File 1">
-                    <Setter Property="Background" Value="#FFF5D9"/>
+                    <Setter Property="Background" Value="#E9D9FF"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Missing in File 2">
-                    <Setter Property="Background" Value="#FFF5D9"/>
+                    <Setter Property="Background" Value="#E9D9FF"/>
                 </DataTrigger>
+                <!-- Parsing Error color changed to a stronger orange for clearer contrast -->
                 <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
-                    <Setter Property="Background" Value="#FFF2C2"/>
+                    <Setter Property="Background" Value="#FFB266"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Status}" Value="Info">
-                    <Setter Property="Background" Value="#F0F2F5"/>
+                    <Setter Property="Background" Value="#E6E9EF"/>
                 </DataTrigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="BorderBrush" Value="#336699"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                </Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <Grid Margin="10">
+    <Grid Margin="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="1.5*"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="6"/>
+            <RowDefinition Height="2.5*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
+        <!-- Header -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,4">
             <TextBlock Text="Rule ID:" FontWeight="Bold" VerticalAlignment="Center"/>
-            <TextBlock x:Name="RuleIdText" Margin="6,0,20,0" FontFamily="Consolas" VerticalAlignment="Center"/>
+            <TextBlock x:Name="RuleIdText" Margin="6,0,14,0" FontFamily="Consolas" VerticalAlignment="Center"/>
             <TextBlock Text="Overall Status:" FontWeight="Bold" VerticalAlignment="Center"/>
-            <TextBlock x:Name="OverallStatusText" Margin="6,0,20,0" FontWeight="Bold" VerticalAlignment="Center"/>
-            <Button Content="Close" Margin="20,0,0,0" Padding="12,4" Click="Close_Click"/>
+            <TextBlock x:Name="OverallStatusText" Margin="6,0,14,0" FontWeight="Bold" VerticalAlignment="Center"
+                       ToolTip="The aggregated status for this rule comparing both files."/>
         </StackPanel>
 
-        <GroupBox Header="Property Differences" Grid.Row="1" Margin="0,0,0,8">
+        <!-- Legend -->
+        <WrapPanel Grid.Row="1" Margin="0,0,0,4">
+            <Label Margin="0,2,12,2" ToolTip="Rule present in both files. All properties identical.">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="16" Height="16" Fill="#DFF5D8" Stroke="#666" StrokeThickness="0.5"/>
+                    <TextBlock Text="Match / Same" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,12,2" ToolTip="Present in both files. Only PowerStig version/path tokens differ; all other properties identical.">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="16" Height="16" Fill="#FFF3B3" Stroke="#666" StrokeThickness="0.5"/>
+                    <TextBlock Text="Version Only" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,12,2" ToolTip="Present in both files but one or more non-version properties differ.">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="16" Height="16" Fill="#FFC8C8" Stroke="#666" StrokeThickness="0.5"/>
+                    <TextBlock Text="Different" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,12,2" ToolTip="Rule exists in one file but not the other (either Missing in File 1 or Missing in File 2).">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="16" Height="16" Fill="#E9D9FF" Stroke="#666" StrokeThickness="0.5"/>
+                    <TextBlock Text="Missing" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,12,2" ToolTip="Rule found but its details failed to parse in one or both files.">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="16" Height="16" Fill="#FFB266" Stroke="#666" StrokeThickness="0.5"/>
+                    <TextBlock Text="Parsing Error" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+            <Label Margin="0,2,12,2" ToolTip="Informational row (e.g., instance counts); not a difference category.">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="16" Height="16" Fill="#E6E9EF" Stroke="#666" StrokeThickness="0.5"/>
+                    <TextBlock Text="Info" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Label>
+        </WrapPanel>
+
+        <!-- Property Differences -->
+        <GroupBox Header="Property Differences" Grid.Row="2" Margin="0,0,0,4"
+                  ToolTip="Detailed per-property comparison for this rule. Status indicates how each property differs.">
             <ListView x:Name="PropertyDiffList"
                       ItemContainerStyle="{StaticResource PropertyDiffItemStyle}"
                       SelectionMode="Extended"
                       KeyDown="PropertyDiffList_KeyDown"
-                      GridViewColumnHeader.Click="GridViewColumnHeader_Click">
+                      GridViewColumnHeader.Click="GridViewColumnHeader_Click"
+                      ToolTip="Select rows and press Ctrl+C to copy differences.">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Property" Width="180" DisplayMemberBinding="{Binding Key}"/>
@@ -83,38 +126,66 @@
             </ListView>
         </GroupBox>
 
-        <Border Grid.Row="2" Padding="6" Background="#E9EEF5" CornerRadius="4" Margin="0,0,0,8">
+        <!-- Raw diff options -->
+        <Border Grid.Row="3" Padding="4" Background="#E9EEF5" CornerRadius="4" Margin="0,0,0,4"
+                ToolTip="Toggle raw text diff visibility and restrict to changed lines.">
             <StackPanel Orientation="Horizontal">
                 <CheckBox x:Name="ShowRawDiffCheckBox"
                           Content="Show Raw Text Diff"
                           Margin="0,0,12,0"
                           Checked="ShowRawDiffChanged"
-                          Unchecked="ShowRawDiffChanged"/>
+                          Unchecked="ShowRawDiffChanged"
+                          ToolTip="Show or hide the raw MOF text side-by-side."/>
                 <CheckBox x:Name="ShowOnlyChangedLinesCheckBox"
                           Content="Only Changed Lines"
                           Checked="ShowOnlyChangedLinesChanged"
-                          Unchecked="ShowOnlyChangedLinesChanged"/>
+                          Unchecked="ShowOnlyChangedLinesChanged"
+                          ToolTip="When enabled, displays only lines flagged as changed."/>
             </StackPanel>
         </Border>
 
-        <GridSplitter Grid.Row="3"
+        <!-- Splitter spacer -->
+        <GridSplitter Grid.Row="4"
                       Height="6"
                       HorizontalAlignment="Stretch"
-                      Background="#D0D7E2"/>
+                      Background="#D0D7E2"
+                      ToolTip="Drag to adjust space between property and raw text sections."/>
 
-        <GroupBox Header="Raw Text Diff" Grid.Row="4">
+        <!-- Raw text diff -->
+        <GroupBox Header="Raw Text Diff" Grid.Row="5" Margin="0,0,0,4"
+                  ToolTip="Aligned raw text lines (PowerStig versions normalized when assessing changes).">
             <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="6"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="RawFile1Label"
+                           Grid.Row="0" Grid.Column="0"
+                           Text="File 1"
+                           FontWeight="Bold"
+                           Margin="4,0,0,4"
+                           ToolTip="Raw text from File 1 for this rule."/>
+                <TextBlock x:Name="RawFile2Label"
+                           Grid.Row="0" Grid.Column="2"
+                           Text="File 2"
+                           FontWeight="Bold"
+                           Margin="4,0,0,4"
+                           ToolTip="Raw text from File 2 for this rule."/>
+
                 <ListBox x:Name="RawLines1"
+                         Grid.Row="1"
                          Grid.Column="0"
                          FontFamily="Consolas"
                          SelectionMode="Extended"
                          KeyDown="RawLines_KeyDown"
-                         ItemTemplate="{StaticResource RawLineTemplate}">
+                         ItemTemplate="{StaticResource RawLineTemplate}"
+                         ToolTip="Select lines and press Ctrl+C to copy.">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Background" Value="{Binding Bg}"/>
@@ -122,16 +193,20 @@
                         </Style>
                     </ListBox.ItemContainerStyle>
                 </ListBox>
-                <GridSplitter Grid.Column="1"
+                <GridSplitter Grid.Row="1"
+                              Grid.Column="1"
                               Width="6"
                               HorizontalAlignment="Center"
-                              Background="#D0D7E2"/>
+                              Background="#D0D7E2"
+                              ToolTip="Drag to resize raw text pane widths."/>
                 <ListBox x:Name="RawLines2"
+                         Grid.Row="1"
                          Grid.Column="2"
                          FontFamily="Consolas"
                          SelectionMode="Extended"
                          KeyDown="RawLines_KeyDown"
-                         ItemTemplate="{StaticResource RawLineTemplate}">
+                         ItemTemplate="{StaticResource RawLineTemplate}"
+                         ToolTip="Select lines and press Ctrl+C to copy.">
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Background" Value="{Binding Bg}"/>
@@ -142,8 +217,25 @@
             </Grid>
         </GroupBox>
 
-        <DockPanel Grid.Row="5" Margin="0,10,0,0">
-            <TextBlock Text="Right-click raw lists for copy options. Ctrl+C copies selected lines." Foreground="#555"/>
-        </DockPanel>
+        <!-- Bottom -->
+        <Grid Grid.Row="6" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0"
+                       Text="Right-click raw lists for copy options. Ctrl+C copies selected lines."
+                       Foreground="#555"
+                       VerticalAlignment="Center"
+                       ToolTip="Keyboard shortcut: Ctrl+C. You can also right-click for more copy options."/>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Padding="18,6"
+                    Margin="12,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="Close_Click"
+                    ToolTip="Close this detail window."/>
+        </Grid>
     </Grid>
 </Window>
