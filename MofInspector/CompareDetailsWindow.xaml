@@ -51,7 +51,6 @@
             <RowDefinition Height="1.5*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
@@ -60,7 +59,7 @@
             <TextBlock x:Name="RuleIdText" Margin="6,0,20,0" FontFamily="Consolas" VerticalAlignment="Center"/>
             <TextBlock Text="Overall Status:" FontWeight="Bold" VerticalAlignment="Center"/>
             <TextBlock x:Name="OverallStatusText" Margin="6,0,20,0" FontWeight="Bold" VerticalAlignment="Center"/>
-            <Button Content="Close" Margin="20,0,0,0" Padding="12,4" Click="Close_Click"/>
+            <!-- Close button moved to bottom right -->
         </StackPanel>
 
         <GroupBox Header="Property Differences" Grid.Row="1" Margin="0,0,0,8">
@@ -142,5 +141,20 @@
         <DockPanel Grid.Row="5" Margin="0,10,0,0">
             <TextBlock Text="Right-click raw lists for copy options. Ctrl+C copies selected lines." Foreground="#555"/>
         </DockPanel>
+
+        <!-- Bottom row with Close button -->
+        <Grid Grid.Row="6" Margin="0,4,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Padding="18,6"
+                    Margin="12,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="Close_Click"/>
+        </Grid>
     </Grid>
 </Window>
