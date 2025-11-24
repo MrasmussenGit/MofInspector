@@ -7,8 +7,11 @@
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Top (made smaller via tighter margins) -->
             <RowDefinition Height="*"/>
+            <!-- List -->
             <RowDefinition Height="Auto"/>
+            <!-- Bottom -->
         </Grid.RowDefinitions>
 
         <!-- Top section: file load + paths (row 0) -->
