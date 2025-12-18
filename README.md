@@ -4,7 +4,7 @@ A lightweight .NET 8 WPF utility to inspect and compare MOF files. It lets you b
 
 - Target framework: `net8.0-windows`
 - UI technology: WPF
-- App version: 1.0.0.8
+- App version: 1.0.0.9
 
 ## Features
 
