@@ -18,7 +18,7 @@ namespace MofInspector
 
             ParseMofFile(filePath);
         }
-
+        // comment
         private void ParseMofFile(string filePath)
         {
             var lines = File.ReadAllLines(filePath);
