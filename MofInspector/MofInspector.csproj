@@ -7,10 +7,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <ApplicationIcon>256.ico</ApplicationIcon>
-    <Version>1.0.0.9</Version>
-    <FileVersion>1.0.0.9</FileVersion>
-    <AssemblyVersion>1.0.0.9</AssemblyVersion>
-    <InformationalVersion>1.0.0.9</InformationalVersion>
+    <Version>1.0.0.10</Version>
+    <FileVersion>1.0.0.10</FileVersion>
+    <AssemblyVersion>1.0.0.10</AssemblyVersion>
+    <InformationalVersion>1.0.0.10</InformationalVersion>
 	<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 

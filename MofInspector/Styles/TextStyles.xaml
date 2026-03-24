@@ -1,0 +1,80 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Import Colors -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <!-- HEADER STYLES -->
+    
+    <!-- Main Window/Page Header Border -->
+    <Style x:Key="HeaderBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+        <Setter Property="Padding" Value="20"/>
+    </Style>
+    
+    <!-- Header Title Text -->
+    <Style x:Key="HeaderTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextWhiteBrush}"/>
+    </Style>
+    
+    <!-- Large Header Title (for main windows) -->
+    <Style x:Key="HeaderTitleLargeStyle" TargetType="TextBlock" BasedOn="{StaticResource HeaderTitleStyle}">
+        <Setter Property="FontSize" Value="28"/>
+    </Style>
+    
+    <!-- Header Subtitle Text -->
+    <Style x:Key="HeaderSubtitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="#BDC3C7"/>
+        <Setter Property="Margin" Value="0,5,0,0"/>
+    </Style>
+    
+    <!-- SECTION HEADERS -->
+    
+    <!-- Section Title (like "Summary", "File Paths") -->
+    <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
+    </Style>
+    
+    <!-- Subsection Title (smaller) -->
+    <Style x:Key="SubsectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMediumBrush}"/>
+    </Style>
+    
+    <!-- BODY TEXT STYLES -->
+    
+    <!-- Standard body text -->
+    <Style x:Key="BodyTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{StaticResource TextMediumBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+    
+    <!-- Hint/Help text (italic, gray) -->
+    <Style x:Key="HintTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontStyle" Value="Italic"/>
+        <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
+    </Style>
+    
+    <!-- Label text (for form labels) -->
+    <Style x:Key="LabelTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource TextDarkBrush}"/>
+    </Style>
+    
+    <!-- Small text (for metadata, counts) -->
+    <Style x:Key="SmallTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{StaticResource TextLightBrush}"/>
+    </Style>
+</ResourceDictionary>

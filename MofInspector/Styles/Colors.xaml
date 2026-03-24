@@ -1,0 +1,97 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- STIG JSON Viewer Color Palette -->
+    <!-- Copy this file to your other WPF project to maintain consistent colors -->
+    
+    <!-- Primary Colors -->
+    <Color x:Key="PrimaryDark">#2C3E50</Color>        <!-- Dark blue-gray for headers -->
+    <Color x:Key="PrimaryLight">#ECF0F1</Color>       <!-- Light gray for backgrounds -->
+    
+    <!-- Background Colors -->
+    <Color x:Key="BackgroundWhite">#FFFFFF</Color>
+    <Color x:Key="BackgroundLight">#F8F9FA</Color>    <!-- Very light gray -->
+    <Color x:Key="BackgroundGray">#ECF0F1</Color>
+    
+    <!-- Border Colors -->
+    <Color x:Key="BorderGray">#BDC3C7</Color>         <!-- Standard border gray -->
+    <Color x:Key="BorderLight">#D5DBDB</Color>        <!-- Light border -->
+
+    <!-- Text Colors -->
+    <Color x:Key="TextDark">#2C3E50</Color>           <!-- Primary text -->
+    <Color x:Key="TextMedium">#34495E</Color>         <!-- Secondary text -->
+    <Color x:Key="TextLight">#7F8C8D</Color>          <!-- Muted/hint text -->
+    <Color x:Key="TextWhite">#FFFFFF</Color>
+
+    <!-- Status Colors -->
+    <Color x:Key="StatusSuccess">#27AE60</Color>      <!-- Green - success/matched/implemented -->
+    <Color x:Key="StatusWarning">#E67E22</Color>      <!-- Orange - warning/manual/unmatched -->
+    <Color x:Key="StatusError">#E74C3C</Color>        <!-- Red - error/missing/failed -->
+    <Color x:Key="StatusInfo">#3498DB</Color>         <!-- Blue - info/total -->
+    <Color x:Key="StatusPurple">#9B59B6</Color>       <!-- Purple - coverage percentage -->
+    <Color x:Key="StatusTeal">#1ABC9C</Color>         <!-- Teal - automation percentage -->
+
+    <!-- Status Light Colors (for backgrounds) -->
+    <Color x:Key="SuccessLight">#DFF5D8</Color>       <!-- Light green -->
+    <Color x:Key="WarningLight">#FFF3B3</Color>       <!-- Light yellow/orange -->
+    <Color x:Key="ErrorLight">#FFC8C8</Color>         <!-- Light red -->
+    <Color x:Key="ErrorMedium">#FFB266</Color>        <!-- Medium red/orange -->
+    <Color x:Key="InfoLight">#E9D9FF</Color>          <!-- Light purple/blue -->
+    
+    <!-- Severity Colors -->
+    <Color x:Key="SeverityHigh">#E74C3C</Color>       <!-- Red -->
+    <Color x:Key="SeverityMedium">#E67E22</Color>     <!-- Orange -->
+    <Color x:Key="SeverityLow">#F1C40F</Color>        <!-- Yellow -->
+    <Color x:Key="SeverityUnknown">#95A5A6</Color>    <!-- Gray -->
+    
+    <!-- Background Tint Colors (for panels) -->
+    <Color x:Key="TintBlue">#EBF5FB</Color>           <!-- Light blue tint -->
+    <Color x:Key="TintGreen">#EAFAF1</Color>          <!-- Light green tint -->
+    <Color x:Key="TintYellow">#FEF9E7</Color>         <!-- Light yellow tint -->
+    <Color x:Key="TintGreenLight">#E8F8F5</Color>     <!-- Very light green -->
+    
+    <!-- Border Tint Colors -->
+    <Color x:Key="BorderBlue">#3498DB</Color>
+    <Color x:Key="BorderGreen">#27AE60</Color>
+    <Color x:Key="BorderYellow">#F39C12</Color>
+    <Color x:Key="BorderGreenLight">#A9DFBF</Color>
+    <Color x:Key="BorderBlueLight">#AED6F1</Color>
+    
+    <!-- SolidColorBrush Resources (for easy binding) -->
+    <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource PrimaryDark}"/>
+    <SolidColorBrush x:Key="PrimaryLightBrush" Color="{StaticResource PrimaryLight}"/>
+    
+    <SolidColorBrush x:Key="BackgroundWhiteBrush" Color="{StaticResource BackgroundWhite}"/>
+    <SolidColorBrush x:Key="BackgroundLightBrush" Color="{StaticResource BackgroundLight}"/>
+    <SolidColorBrush x:Key="BackgroundGrayBrush" Color="{StaticResource BackgroundGray}"/>
+    
+    <SolidColorBrush x:Key="BorderGrayBrush" Color="{StaticResource BorderGray}"/>
+    <SolidColorBrush x:Key="BorderLightBrush" Color="{StaticResource BorderLight}"/>
+    
+    <SolidColorBrush x:Key="TextDarkBrush" Color="{StaticResource TextDark}"/>
+    <SolidColorBrush x:Key="TextMediumBrush" Color="{StaticResource TextMedium}"/>
+    <SolidColorBrush x:Key="TextLightBrush" Color="{StaticResource TextLight}"/>
+    <SolidColorBrush x:Key="TextWhiteBrush" Color="{StaticResource TextWhite}"/>
+    
+    <SolidColorBrush x:Key="StatusSuccessBrush" Color="{StaticResource StatusSuccess}"/>
+    <SolidColorBrush x:Key="StatusWarningBrush" Color="{StaticResource StatusWarning}"/>
+    <SolidColorBrush x:Key="StatusErrorBrush" Color="{StaticResource StatusError}"/>
+    <SolidColorBrush x:Key="StatusInfoBrush" Color="{StaticResource StatusInfo}"/>
+    <SolidColorBrush x:Key="StatusPurpleBrush" Color="{StaticResource StatusPurple}"/>
+    <SolidColorBrush x:Key="StatusTealBrush" Color="{StaticResource StatusTeal}"/>
+    
+    <SolidColorBrush x:Key="SeverityHighBrush" Color="{StaticResource SeverityHigh}"/>
+    <SolidColorBrush x:Key="SeverityMediumBrush" Color="{StaticResource SeverityMedium}"/>
+    <SolidColorBrush x:Key="SeverityLowBrush" Color="{StaticResource SeverityLow}"/>
+    <SolidColorBrush x:Key="SeverityUnknownBrush" Color="{StaticResource SeverityUnknown}"/>
+
+    <!-- Status Light Brushes -->
+    <SolidColorBrush x:Key="SuccessLightBrush" Color="{StaticResource SuccessLight}"/>
+    <SolidColorBrush x:Key="WarningLightBrush" Color="{StaticResource WarningLight}"/>
+    <SolidColorBrush x:Key="ErrorLightBrush" Color="{StaticResource ErrorLight}"/>
+    <SolidColorBrush x:Key="ErrorMediumBrush" Color="{StaticResource ErrorMedium}"/>
+    <SolidColorBrush x:Key="InfoLightBrush" Color="{StaticResource InfoLight}"/>
+
+    <!-- Alias for common usage -->
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderGray}"/>
+</ResourceDictionary>
