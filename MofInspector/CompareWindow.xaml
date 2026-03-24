@@ -18,10 +18,16 @@
             <!-- Footer -->
         </Grid.RowDefinitions>
 
-        <!-- Header -->
-        <Border Grid.Row="0" Style="{StaticResource HeaderBorderStyle}" Margin="0,0,0,12">
-            <TextBlock Text="MOF File Comparison" Style="{StaticResource HeaderTitleStyle}"/>
-        </Border>
+        <!-- Top section: file load + paths (row 0) -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,8" Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button Content="Load File 1" Width="120" Margin="0,0,8,0" Click="LoadFile1_Click"/>
+                <Button Content="Load File 2" Width="120" Margin="0,0,16,0" Click="LoadFile2_Click"/>
+                <TextBlock Text="File1:" FontWeight="Bold" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="File1PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                <TextBlock Text="File2:" FontWeight="Bold" Margin="15,0,5,0" VerticalAlignment="Center"/>
+                <TextBlock x:Name="File2PathText" Width="240" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+            </StackPanel>
 
         <!-- File Load Section -->
         <Border Grid.Row="1" Style="{StaticResource PanelBorderStyle}" Margin="0,0,0,12">
@@ -144,7 +150,7 @@
                             <Setter Property="Background" Value="{StaticResource InfoLightBrush}"/>
                         </DataTrigger>
                         <DataTrigger Binding="{Binding Status}" Value="Parsing Error">
-                            <Setter Property="Background" Value="{StaticResource ErrorMediumBrush}"/>
+                            <Setter Property="Background" Value="#FFB266"/>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
@@ -183,34 +189,26 @@
             </ListView.View>
         </ListView>
 
-        <!-- Footer with Stats and Close Button -->
-        <Border Grid.Row="3" Style="{StaticResource FooterBorderStyle}" Margin="0,12,0,0">
-            <Grid Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
-                    <TextBlock Text="Total Rules:" 
-                               Style="{StaticResource LabelTextStyle}" 
-                               Margin="0,0,4,0"/>
-                    <TextBlock x:Name="TotalCountText" 
-                               Style="{StaticResource BodyTextStyle}"
-                               Margin="0,0,12,0"/>
-                    <TextBlock Text="Displayed:" 
-                               Style="{StaticResource LabelTextStyle}" 
-                               Margin="0,0,4,0"/>
-                    <TextBlock x:Name="DisplayedCountText"
-                               Style="{StaticResource BodyTextStyle}"/>
-                </StackPanel>
-                <Button Grid.Column="1"
-                        Content="Close"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Width="100"
-                        Height="32"
-                        Margin="12,0,0,0"
-                        Click="Close_Click"/>
-            </Grid>
-        </Border>
+        <!-- Bottom aligned stats + Close button -->
+        <Grid Grid.Row="2" Margin="0,8,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="Total Rules:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock x:Name="TotalCountText" Margin="0,0,12,0"/>
+                <TextBlock Text="Displayed:" FontWeight="Bold" Margin="0,0,4,0"/>
+                <TextBlock x:Name="DisplayedCountText"/>
+            </StackPanel>
+            <Button Grid.Column="1"
+                    Content="Close"
+                    Width="100"
+                    Height="30"
+                    Margin="12,0,0,0"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Click="Close_Click"/>
+        </Grid>
     </Grid>
 </Window>
