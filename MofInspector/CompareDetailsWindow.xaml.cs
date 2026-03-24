@@ -124,15 +124,17 @@ namespace MofInspector
             }
 
             OverallStatusText.Text = status;
-            OverallStatusText.Foreground = status switch
+
+            // Set badge background color based on status
+            StatusBadge.Background = status switch
             {
-                "Match" => Brushes.DarkGreen,
-                "VersionOnly" => Brushes.DarkGoldenrod,
-                "Different" => Brushes.DarkRed,
-                "Missing in File 1" => Brushes.DarkOrange,
-                "Missing in File 2" => Brushes.DarkOrange,
-                "Parsing Error" => Brushes.Peru,
-                _ => Brushes.Black
+                "Match" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#27AE60")),
+                "VersionOnly" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#F39C12")),
+                "Different" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E74C3C")),
+                "Missing in File 1" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9B59B6")),
+                "Missing in File 2" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#9B59B6")),
+                "Parsing Error" => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#E67E22")),
+                _ => new SolidColorBrush((Color)ColorConverter.ConvertFromString("#95A5A6"))
             };
         }
 
@@ -372,6 +374,27 @@ namespace MofInspector
                 var text = string.Join(Environment.NewLine, selected.Select(r => $"{r.Key}: [{r.Value1}] vs [{r.Value2}] ({r.Status})"));
                 Clipboard.SetText(text);
             }
+        }
+
+        private void PropertyDiffList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (PropertyDiffList.SelectedItem is DiffRow selectedRow)
+            {
+                ShowPropertyDetail(selectedRow);
+            }
+        }
+
+        private void ShowPropertyDetail(DiffRow row)
+        {
+            if (row == null) return;
+
+            // Populate the detail view
+            DetailPropertyName.Text = $"Property: {row.Key}";
+            DetailValue1.Text = string.IsNullOrEmpty(row.Value1) ? "(empty)" : row.Value1;
+            DetailValue2.Text = string.IsNullOrEmpty(row.Value2) ? "(empty)" : row.Value2;
+
+            // Expand the detail panel
+            PropertyDetailExpander.IsExpanded = true;
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();

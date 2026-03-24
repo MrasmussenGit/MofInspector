@@ -37,12 +37,20 @@ namespace MofInspector
 
         private void InspectMof_Click(object sender, RoutedEventArgs e)
         {
-
-            var inspectWindow = new InspectWindow
+            var dialog = new Microsoft.Win32.OpenFileDialog
             {
-                Owner = this // Makes the new window open on top of the menu window
+                Filter = "MOF Files (*.mof)|*.mof|All Files (*.*)|*.*",
+                Title = "Select a MOF File"
             };
-            inspectWindow.ShowDialog();
+
+            if (dialog.ShowDialog() == true)
+            {
+                var inspectWindow = new InspectWindow(dialog.FileName)
+                {
+                    Owner = this
+                };
+                inspectWindow.ShowDialog();
+            }
         }
 
 

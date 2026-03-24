@@ -1,0 +1,299 @@
+<Window x:Class="MofInspector.StigDetailsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="STIG Details" 
+        Height="800" Width="1400"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#2C3E50" Padding="20">
+            <StackPanel>
+                <TextBlock x:Name="StigNameText" 
+                           Text="STIG Name" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White"/>
+                <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <Border Background="#3498DB" 
+                            CornerRadius="3" 
+                            Padding="8,4" 
+                            Margin="0,0,10,0"
+                            Cursor="Hand"
+                            MouseLeftButtonDown="TotalRulesBorder_Click"
+                            ToolTip="Click to show all rules">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.8"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock x:Name="TotalRulesText" 
+                                   Text="Total Rules: 0" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Background="#E74C3C" 
+                            CornerRadius="3" 
+                            Padding="8,4" 
+                            Margin="0,0,10,0"
+                            Cursor="Hand"
+                            MouseLeftButtonDown="SkippedRulesBorder_Click"
+                            ToolTip="Click to filter skipped rules">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.8"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock x:Name="SkippedRulesText" 
+                                   Text="Skipped: 0" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Background="#27AE60" 
+                            CornerRadius="3" 
+                            Padding="8,4"
+                            Cursor="Hand"
+                            MouseLeftButtonDown="ActiveRulesBorder_Click"
+                            ToolTip="Click to filter active rules">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Opacity" Value="0.8"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <TextBlock x:Name="ActiveRulesText" 
+                                   Text="Active: 0" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"/>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Filter and Search Bar -->
+        <Border Grid.Row="1" Background="#ECF0F1" Padding="15,10" BorderBrush="#BDC3C7" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,15,0">
+                    <TextBlock Text="Filter:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
+                    <ComboBox x:Name="FilterComboBox" 
+                              Width="150" 
+                              SelectionChanged="FilterComboBox_SelectionChanged">
+                        <ComboBoxItem Content="All Rules" IsSelected="True"/>
+                        <ComboBoxItem Content="Skipped Only"/>
+                        <ComboBoxItem Content="Active Only"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock Text="Search:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
+                    <TextBox x:Name="SearchTextBox" 
+                             Width="300" 
+                             VerticalAlignment="Center"
+                             TextChanged="SearchTextBox_TextChanged"
+                             ToolTip="Search by Rule ID or properties"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="2" 
+                           x:Name="ResultCountText" 
+                           Text="Showing 0 rules" 
+                           VerticalAlignment="Center" 
+                           Foreground="#7F8C8D"
+                           FontStyle="Italic"/>
+            </Grid>
+        </Border>
+
+        <!-- Master-Detail View -->
+        <Grid Grid.Row="2" Margin="5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="400" MinWidth="300"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*" MinWidth="400"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Rules List (Master) -->
+            <Border Grid.Column="0" BorderBrush="#BDC3C7" BorderThickness="1" Background="White">
+                <ListBox x:Name="RulesListBox" 
+                         SelectionChanged="RulesListBox_SelectionChanged"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         HorizontalContentAlignment="Stretch">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="12" 
+                                    Margin="8" 
+                                    Background="#F8F9FA" 
+                                    BorderBrush="#BDC3C7" 
+                                    BorderThickness="1"
+                                    CornerRadius="3"
+                                    HorizontalAlignment="Stretch">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding RuleId}" 
+                                                   FontWeight="Bold" 
+                                                   FontSize="13"
+                                                   Foreground="#2C3E50"/>
+                                        <Border x:Name="StatusBadge"
+                                                CornerRadius="3" 
+                                                Padding="6,2" 
+                                                Margin="10,0,0,0"
+                                                VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                                            <Setter Property="Background" Value="#E74C3C"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsSkipped}" Value="False">
+                                                            <Setter Property="Background" Value="#27AE60"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Foreground="White" 
+                                                       FontWeight="SemiBold"
+                                                       FontSize="10">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                                                                <Setter Property="Text" Value="SKIPPED"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding IsSkipped}" Value="False">
+                                                                <Setter Property="Text" Value="ACTIVE"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Category}" 
+                                               TextWrapping="Wrap" 
+                                               FontSize="11"
+                                               Foreground="#7F8C8D"
+                                               Margin="0,5,0,0"
+                                               MaxHeight="40"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding Category}"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Border>
+
+            <GridSplitter Grid.Column="1" 
+                          Width="5" 
+                          HorizontalAlignment="Stretch" 
+                          Background="#BDC3C7"/>
+
+            <!-- Rule Details (Detail) -->
+            <Border Grid.Column="2" BorderBrush="#BDC3C7" BorderThickness="1" Background="White">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="20">
+                        <!-- Placeholder -->
+                        <TextBlock x:Name="DetailsPlaceholder"
+                                   Text="Select a rule from the list to view details" 
+                                   FontStyle="Italic" 
+                                   Foreground="#95A5A6"
+                                   FontSize="14"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   Margin="0,50,0,0"/>
+
+                        <!-- Details Content -->
+                        <StackPanel x:Name="DetailsContent" Visibility="Collapsed">
+                            <!-- Header with Type Badge -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                                <TextBlock x:Name="DetailRuleId" 
+                                           FontSize="20" 
+                                           FontWeight="Bold" 
+                                           Foreground="#2C3E50"/>
+                                <Border x:Name="DetailStatusBadge" 
+                                        CornerRadius="3" 
+                                        Padding="8,4" 
+                                        Margin="15,0,0,0"
+                                        VerticalAlignment="Center">
+                                    <TextBlock x:Name="DetailRuleStatus" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"
+                                               FontSize="12"/>
+                                </Border>
+                            </StackPanel>
+
+                            <!-- Properties Display -->
+                            <TextBlock Text="Rule Properties:" FontWeight="Bold" FontSize="14" Foreground="#34495E" Margin="0,0,0,10"/>
+                            <Border Background="#F8F9FA" 
+                                    BorderBrush="#D5DBDB" 
+                                    BorderThickness="1" 
+                                    CornerRadius="3" 
+                                    Padding="15">
+                                <ItemsControl x:Name="DetailPropertiesDisplay">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Margin="0,8">
+                                                <TextBlock Text="{Binding Key}" 
+                                                           FontWeight="SemiBold" 
+                                                           Foreground="#2C3E50"
+                                                           FontSize="12"/>
+                                                <Border Background="White" 
+                                                        BorderBrush="#BDC3C7" 
+                                                        BorderThickness="1" 
+                                                        CornerRadius="2" 
+                                                        Padding="8" 
+                                                        Margin="0,4,0,0">
+                                                    <TextBlock Text="{Binding Value}" 
+                                                               TextWrapping="Wrap"
+                                                               FontFamily="Consolas"
+                                                               FontSize="11"
+                                                               Foreground="#34495E"/>
+                                                </Border>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Buttons -->
+        <Border Grid.Row="3" Background="#ECF0F1" Padding="15" BorderBrush="#BDC3C7" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="CloseButton" 
+                        Content="Close" 
+                        Width="100" 
+                        Height="35"
+                        Click="CloseButton_Click"
+                        Background="#95A5A6"
+                        Foreground="White"
+                        BorderThickness="0"
+                        FontWeight="SemiBold"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>
