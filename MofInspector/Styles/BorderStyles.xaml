@@ -1,0 +1,97 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- Import Colors -->
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Colors.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <!-- BORDER STYLES -->
+    
+    <!-- Standard Content Border (light gray border, white background) -->
+    <Style x:Key="ContentBorderStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundWhiteBrush}"/>
+        <Setter Property="Padding" Value="15"/>
+    </Style>
+    
+    <!-- Panel Border (with bottom border only) -->
+    <Style x:Key="PanelBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource BackgroundLightBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="Padding" Value="15"/>
+    </Style>
+    
+    <!-- Highlighted Panel (blue tint) -->
+    <Style x:Key="HighlightedPanelBlueStyle" TargetType="Border">
+        <Setter Property="Background" Value="#EBF5FB"/>
+        <Setter Property="BorderBrush" Value="#3498DB"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="Padding" Value="15"/>
+    </Style>
+    
+    <!-- Highlighted Panel (green tint) -->
+    <Style x:Key="HighlightedPanelGreenStyle" TargetType="Border">
+        <Setter Property="Background" Value="#EAFAF1"/>
+        <Setter Property="BorderBrush" Value="#27AE60"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="Padding" Value="15"/>
+    </Style>
+    
+    <!-- Success/Match Panel (green) -->
+    <Style x:Key="SuccessPanelStyle" TargetType="Border">
+        <Setter Property="Background" Value="#E8F8F5"/>
+        <Setter Property="BorderBrush" Value="#27AE60"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+    
+    <!-- Warning Panel (yellow) -->
+    <Style x:Key="WarningPanelStyle" TargetType="Border">
+        <Setter Property="Background" Value="#FEF9E7"/>
+        <Setter Property="BorderBrush" Value="#F39C12"/>
+        <Setter Property="BorderThickness" Value="2"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+    
+    <!-- Info Box (gray background) -->
+    <Style x:Key="InfoBoxStyle" TargetType="Border">
+        <Setter Property="Background" Value="#F8F9FA"/>
+        <Setter Property="BorderBrush" Value="#D5DBDB"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+    
+    <!-- Code/Check Content Box (blue tint) -->
+    <Style x:Key="CodeBoxStyle" TargetType="Border">
+        <Setter Property="Background" Value="#EBF5FB"/>
+        <Setter Property="BorderBrush" Value="#AED6F1"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+    
+    <!-- Fix Text Box (green tint) -->
+    <Style x:Key="FixTextBoxStyle" TargetType="Border">
+        <Setter Property="Background" Value="#EAFAF1"/>
+        <Setter Property="BorderBrush" Value="#A9DFBF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+    
+    <!-- Footer Border -->
+    <Style x:Key="FooterBorderStyle" TargetType="Border">
+        <Setter Property="Background" Value="#ECF0F1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderGrayBrush}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <Setter Property="Padding" Value="15"/>
+    </Style>
+</ResourceDictionary>

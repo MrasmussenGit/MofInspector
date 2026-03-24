@@ -233,11 +233,16 @@ namespace MofInspector
                         diffs.Add($"{kvp.Key}: (missing) vs {kvp.Value}");
                 }
 
+                // Create a summary instead of full text blob
+                string detailsSummary = diffs.Count == 1 
+                    ? "1 property differs" 
+                    : $"{diffs.Count} properties differ";
+
                 allResults.Add(new
                 {
                     RuleId = ruleId,
                     Status = "Different",
-                    Details = string.Join("; ", diffs),
+                    Details = detailsSummary,
                     Category = category
                 });
             }
